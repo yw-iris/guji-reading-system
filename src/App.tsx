@@ -9,6 +9,9 @@ import LandingPage from './pages/LandingPage';
 // Demo 路演页（独立页面）
 import DemoPage from './pages/demo/DemoPage';
 
+// 课标匹配引擎页（独立页面）
+import TextbookEnginePage from './pages/engine/TextbookEnginePage';
+
 // 学生端页面
 import ExplorePage from './pages/student/ExplorePage';
 import ReadingPage from './pages/student/ReadingPage';
@@ -63,6 +66,9 @@ function App() {
 
           {/* Demo 路演页 - 独立页面 */}
           <Route path="/demo" element={<DemoPage />} />
+
+          {/* 课标匹配引擎 - 独立页面 */}
+          <Route path="/engine" element={<TextbookEnginePage />} />
 
           {/* 三端系统 - 带侧边栏 */}
           <Route path="/" element={<AppLayout />}>

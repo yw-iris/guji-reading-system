@@ -2,7 +2,7 @@ import { Typography, Button, Row, Col, Card, Space, Tag } from 'antd';
 import {
   ThunderboltOutlined, ExperimentOutlined,
   TrophyOutlined, ReadOutlined, BulbOutlined,
-  UserOutlined, RobotOutlined, BarChartOutlined,
+  UserOutlined, RobotOutlined, BarChartOutlined, DatabaseOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../stores/appStore';
@@ -71,6 +71,21 @@ export default function LandingPage() {
             }}
           >
             5 分钟路演 Demo
+          </Button>
+          <Button
+            size="large"
+            icon={<DatabaseOutlined />}
+            onClick={() => navigate('/engine')}
+            style={{
+              height: 52,
+              padding: '0 36px',
+              fontSize: 17,
+              borderRadius: 8,
+              border: '1px solid #5b8c5a',
+              color: '#5b8c5a',
+            }}
+          >
+            课标匹配引擎
           </Button>
           <Button
             size="large"
