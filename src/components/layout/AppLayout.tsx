@@ -13,6 +13,7 @@ import {
   SnippetsOutlined,
   BarChartOutlined,
   ShareAltOutlined,
+  ThunderboltOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAppStore } from '../../stores/appStore';
@@ -131,6 +132,19 @@ export default function AppLayout() {
             marginTop: 8,
           }}
         />
+
+        {/* Demo 路演入口 */}
+        <div style={{ position: 'absolute', bottom: 80, width: '100%', padding: '0 16px' }}>
+          <Button
+            block
+            type="text"
+            icon={<ThunderboltOutlined />}
+            onClick={() => navigate('/demo')}
+            style={{ color: '#c43a31' }}
+          >
+            {sidebarCollapsed ? '' : '⚡ 路演 Demo'}
+          </Button>
+        </div>
 
         {/* 底部角色切换 */}
         <div style={{ position: 'absolute', bottom: 16, width: '100%', padding: '0 16px' }}>

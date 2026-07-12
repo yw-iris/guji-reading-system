@@ -3,6 +3,12 @@ import { ConfigProvider } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import AppLayout from './components/layout/AppLayout';
 
+// Landing Page（独立页面，不需要侧边栏）
+import LandingPage from './pages/LandingPage';
+
+// Demo 路演页（独立页面）
+import DemoPage from './pages/demo/DemoPage';
+
 // 学生端页面
 import ExplorePage from './pages/student/ExplorePage';
 import ReadingPage from './pages/student/ReadingPage';
@@ -52,9 +58,15 @@ function App() {
     <ConfigProvider theme={gujiTheme} locale={zhCN}>
       <BrowserRouter>
         <Routes>
+          {/* Landing Page - 独立页面 */}
+          <Route path="/landing" element={<LandingPage />} />
+
+          {/* Demo 路演页 - 独立页面 */}
+          <Route path="/demo" element={<DemoPage />} />
+
+          {/* 三端系统 - 带侧边栏 */}
           <Route path="/" element={<AppLayout />}>
-            {/* 默认跳转 */}
-            <Route index element={<Navigate to="/student/explore" replace />} />
+            <Route index element={<Navigate to="/landing" replace />} />
 
             {/* 学生端 */}
             <Route path="student/explore" element={<ExplorePage />} />
@@ -76,7 +88,7 @@ function App() {
             <Route path="librarian/students" element={<StudentsPage />} />
 
             {/* 404 */}
-            <Route path="*" element={<Navigate to="/student/explore" replace />} />
+            <Route path="*" element={<Navigate to="/landing" replace />} />
           </Route>
         </Routes>
       </BrowserRouter>
