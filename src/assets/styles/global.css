@@ -1,0 +1,125 @@
+/* ===== 古籍阅读系统 - 全局样式 ===== */
+
+/* 古籍风格色彩变量 */
+:root {
+  --parchment: #f5e6d3;
+  --parchment-dark: #e8d5b8;
+  --ink-black: #2c1810;
+  --ink-gray: #5c4a3a;
+  --vermilion: #c43a31;
+  --gold: #b8860b;
+  --jade: #5b8c5a;
+  --rice-paper: #fdfaf3;
+  --border-ink: #d4c5b2;
+
+  --primary: var(--vermilion);
+  --bg-base: var(--rice-paper);
+  --text-primary: var(--ink-black);
+  --text-secondary: var(--ink-gray);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: 'Noto Serif SC', 'Source Han Serif SC', 'STSong', 'SimSun', 'KaiTi', serif;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 古籍风格滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--parchment);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-ink);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-gray);
+}
+
+/* 古籍纸张卡片效果 */
+.parchment-card {
+  background: linear-gradient(135deg, #fdfaf3 0%, #f5e6d3 100%);
+  border: 1px solid var(--border-ink);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(44, 24, 16, 0.08);
+  transition: all 0.3s ease;
+}
+.parchment-card:hover {
+  box-shadow: 0 4px 16px rgba(44, 24, 16, 0.15);
+  transform: translateY(-2px);
+}
+
+/* 竖排文本（装饰用） */
+.vertical-text {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+/* 印章效果 */
+.seal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 2px solid var(--vermilion);
+  border-radius: 4px;
+  color: var(--vermilion);
+  font-size: 14px;
+  font-weight: bold;
+  transform: rotate(-5deg);
+}
+
+/* 古籍阅读容器 */
+.reading-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 24px;
+  background: linear-gradient(to bottom, #fdfaf3 0%, #f5e6d3 50%, #fdfaf3 100%);
+  min-height: 100%;
+}
+
+/* 文本层级标签 */
+.tier-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.tier-original {
+  background: #f0e6d3;
+  color: #8b6914;
+}
+.tier-adapted {
+  background: #d4edda;
+  color: #3c6e47;
+}
+.tier-vernacular {
+  background: #d6eaf8;
+  color: #2e5984;
+}
+
+/* 动画 */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in {
+  animation: fadeIn 0.5s ease forwards;
+}
