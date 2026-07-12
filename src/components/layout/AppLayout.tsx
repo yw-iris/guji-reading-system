@@ -133,7 +133,7 @@ export default function AppLayout() {
           }}
         />
 
-        {/* Demo 路演入口 */}
+        {/* Demo 演示入口 */}
         <div style={{ position: 'absolute', bottom: 80, width: '100%', padding: '0 16px' }}>
           <Button
             block
@@ -142,7 +142,7 @@ export default function AppLayout() {
             onClick={() => navigate('/demo')}
             style={{ color: '#c43a31' }}
           >
-            {sidebarCollapsed ? '' : '⚡ 路演 Demo'}
+            {sidebarCollapsed ? '' : '⚡ 系统演示'}
           </Button>
         </div>
 

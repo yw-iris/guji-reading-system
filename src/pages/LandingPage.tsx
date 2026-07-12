@@ -50,9 +50,9 @@ export default function LandingPage() {
         </Title>
 
         <Paragraph style={{ color: '#d4c5b2', fontSize: 16, maxWidth: 700, margin: '0 auto 32px' }}>
-          全场唯一对接义务教育课标 · AI三层分级重构 · 真实小学生视角定义需求
+          对接义务教育语文课标 · AI三层分级重构 · 真实用户视角定义需求
           <br />
-          解决"CADAL 280万册古籍看不懂、不对应课本、无法服务教学"的世界级痛点
+          致力于解决"CADAL 280万册古籍看不懂、不对应课本、无法服务教学"的现实难题
         </Paragraph>
 
         <Space size="large" wrap>
@@ -70,7 +70,7 @@ export default function LandingPage() {
               borderRadius: 8,
             }}
           >
-            5 分钟路演 Demo
+            5 分钟系统演示
           </Button>
           <Button
             size="large"
@@ -108,21 +108,21 @@ export default function LandingPage() {
       {/* 三大痛点 */}
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '48px 24px' }}>
         <Title level={3} style={{ textAlign: 'center', color: '#2c1810', marginBottom: 32 }}>
-          ⚡ CADAL 现存的世界级硬痛点（所有队伍都没解决）
+          ⚡ CADAL 古籍资源服务教学的现实难题
         </Title>
         <Row gutter={[24, 24]}>
           {[
             {
-              icon: '📚', title: '280万册古籍，无人能读',
-              desc: 'CADAL 拥有海量古籍、蒙学、方志资源，但原文晦涩、无难度分级、不对应中小学课本。现有系统只能看原版，学生根本看不懂。',
+              icon: '📚', title: '280万册古籍，难以直接用于教学',
+              desc: 'CADAL 拥有海量古籍、蒙学、方志资源，但原文晦涩、缺乏难度分级、未对标中小学课本。现有系统仅提供原版查看，学生难以自主阅读。',
             },
             {
-              icon: '🏫', title: '图书馆系统与教学脱节',
-              desc: '现有图书馆系统、CADAL 官网只能检索和查看原版古籍，不能自动适配小学生水平，无法服务于义务教育。',
+              icon: '🏫', title: '图书馆系统与义务教育衔接不足',
+              desc: '现有图书馆系统和 CADAL 官网主要面向学术检索，缺乏面向小学生的内容适配和阅读引导功能，无法有效服务于义务教育阶段。',
             },
             {
-              icon: '🎓', title: '大学生项目只做表面功夫',
-              desc: '所有浙大参赛队只会做古籍校对、数字策展、学术检索——全部是老旧赛道，内卷严重，不能真正落地教学。',
+              icon: '🎓', title: '古籍教学工具市场存在空白',
+              desc: '当前古籍数字化项目多聚焦学术校对、策展与检索，尚缺乏直接面向课堂教学、对接课标要求的古籍阅读工具，老师备课和学生拓展均缺乏抓手。',
             },
           ].map((item, i) => (
             <Col xs={24} sm={8} key={i}>
@@ -140,36 +140,36 @@ export default function LandingPage() {
       <div style={{ background: '#faf5eb', padding: '48px 24px' }}>
         <div style={{ maxWidth: 1000, margin: '0 auto' }}>
           <Title level={3} style={{ textAlign: 'center', color: '#2c1810', marginBottom: 8 }}>
-            🤖 四大核心技术功能（CADAL 官方完全没有）
+            🤖 四大核心功能
           </Title>
           <Text type="secondary" style={{ display: 'block', textAlign: 'center', marginBottom: 32 }}>
-            所有功能现有图书馆、CADAL官方完全没有，属于原创创新系统
+            基于 CADAL 古籍资源库的原创功能体系，现有图书馆系统尚未覆盖
           </Text>
           <Row gutter={[16, 16]}>
             {[
               {
-                icon: <RobotOutlined />, tag: '核心大招',
+                icon: <RobotOutlined />, tag: '核心功能',
                 title: 'CADAL古籍AI课标自动对标',
                 desc: '系统自动扫描CADAL古籍，精准匹配1-12年级语文课本知识点。例如五年级学《杨氏之子》，自动从CADAL数万册古籍中筛选同源魏晋轶事古文，精准拓展课内知识。',
-                highlight: '碾压点：全场唯一实现「课本+古籍精准联动」',
+                highlight: '实现「课本知识点 ↔ CADAL古籍」精准联动',
               },
               {
-                icon: <ReadOutlined />, tag: '技术壁垒',
+                icon: <ReadOutlined />, tag: '技术亮点',
                 title: '三层难度智能分级重构',
-                desc: '对任意一篇CADAL繁体古籍，AI自动生成：A级（原版繁体·学术留存）、B级（简化适配·适合精读）、C级（白话通识·预习理解）。不是简单翻译，是语义重构、难度梯度化。',
-                highlight: '技术含金量远超普通学生作品',
+                desc: '对任意一篇CADAL繁体古籍，AI自动生成：A级（原版繁体·学术留存）、B级（简化适配·适合精读）、C级（白话通识·预习理解）。基于语义重构实现难度梯度化，非简单翻译。',
+                highlight: 'AI语义重构，难度梯度化处理',
               },
               {
-                icon: <BulbOutlined />, tag: '独创',
+                icon: <BulbOutlined />, tag: '教学工具',
                 title: '古籍生字考点自动拆解',
-                desc: '读取CADAL古籍后，系统自动标注必考生字、多音字、古今异义，自动生成课内同步练习题、默写考点，配套CADAL原版古籍溯源截图。',
-                highlight: '老师备课直接从2小时缩到5分钟',
+                desc: '读取CADAL古籍后，系统自动标注必考生字、多音字、古今异义，自动生成课内同步练习题和默写考点，配套CADAL原版古籍溯源截图。',
+                highlight: '备课效率从2小时缩短至5分钟',
               },
               {
-                icon: <BarChartOutlined />, tag: '落地',
+                icon: <BarChartOutlined />, tag: '落地应用',
                 title: '图书馆研学智能任务生成',
-                desc: '馆员后台一键生成小学古籍研学任务单、阅读打卡清单、分层作业。完美满足赛事要求：可馆内试运行、可长期展陈、可落地教学。',
-                highlight: '满足赛事3-5件展陈硬性要求',
+                desc: '馆员后台一键生成古籍研学任务单、阅读打卡清单、分层作业。支持馆内试运行和长期展陈，满足赛事落地性要求。',
+                highlight: '支持馆内试运行与长期展陈',
               },
             ].map((item, i) => (
               <Col xs={24} sm={12} key={i}>
@@ -193,7 +193,7 @@ export default function LandingPage() {
       {/* 双人分工 */}
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '48px 24px' }}>
         <Title level={3} style={{ textAlign: 'center', color: '#2c1810', marginBottom: 32 }}>
-          👥 双人精准分工
+          👥 团队分工
         </Title>
         <Row gutter={[24, 24]}>
           <Col xs={24} md={12}>
@@ -204,16 +204,16 @@ export default function LandingPage() {
               <Space align="start">
                 <UserOutlined style={{ fontSize: 40, color: '#c43a31' }} />
                 <div>
-                  <Title level={4} style={{ margin: 0, color: '#c43a31' }}>五年级核心创始人</Title>
-                  <Tag color="#c43a31" style={{ marginTop: 4 }}>全场最大加分项 · 不可替代</Tag>
+                  <Title level={4} style={{ margin: 0, color: '#c43a31' }}>需求与产品设计</Title>
+                  <Tag color="#c43a31" style={{ marginTop: 4 }}>用户视角 · 课标专业</Tag>
                 </div>
               </Space>
               <ul style={{ marginTop: 16, paddingLeft: 20 }}>
-                <li style={{ marginBottom: 6 }}>制定小学生古文难度分级标准（浙大大学生根本不懂课标）</li>
-                <li style={{ marginBottom: 6 }}>筛选五六年级真实课内重难点、易错点</li>
-                <li style={{ marginBottom: 6 }}>设计软件界面的儿童友好逻辑、操作流程</li>
-                <li style={{ marginBottom: 6 }}>路演主讲：用户痛点、教育价值、落地意义</li>
-                <li>现场 Demo 体验示范，以真实学生身份背书作品</li>
+                <li style={{ marginBottom: 6 }}>制定小学生古文难度分级标准（基于2022版语文课标）</li>
+                <li style={{ marginBottom: 6 }}>梳理五六年级课内重难点、易错点和考点分布</li>
+                <li style={{ marginBottom: 6 }}>设计面向儿童的界面交互逻辑与操作流程</li>
+                <li style={{ marginBottom: 6 }}>演示讲解：用户需求分析、教育应用价值、落地场景</li>
+                <li>现场 Demo 示范，以真实用户身份验证产品价值</li>
               </ul>
             </Card>
           </Col>
@@ -225,16 +225,16 @@ export default function LandingPage() {
               <Space align="start">
                 <ExperimentOutlined style={{ fontSize: 40, color: '#2e5984' }} />
                 <div>
-                  <Title level={4} style={{ margin: 0, color: '#2e5984' }}>浙大技术合伙人</Title>
-                  <Tag color="#2e5984" style={{ marginTop: 4 }}>技术实现 · 拉高作品上限</Tag>
+                  <Title level={4} style={{ margin: 0, color: '#2e5984' }}>技术开发与系统实现</Title>
+                  <Tag color="#2e5984" style={{ marginTop: 4 }}>全栈开发 · AI工程</Tag>
                 </div>
               </Space>
               <ul style={{ marginTop: 16, paddingLeft: 20 }}>
                 <li style={{ marginBottom: 6 }}>对接 CADAL 官方开放资源接口</li>
-                <li style={{ marginBottom: 6 }}>搭建前端网页系统、AI语义处理模型</li>
+                <li style={{ marginBottom: 6 }}>搭建前端网页系统与AI语义处理模型</li>
                 <li style={{ marginBottom: 6 }}>实现难度分级、文本重构、课标匹配算法</li>
-                <li style={{ marginBottom: 6 }}>制作后台管理系统、数据看板、导出报表</li>
-                <li>支撑现场流畅 Demo、无 Bug 运行</li>
+                <li style={{ marginBottom: 6 }}>制作后台管理系统、数据看板与报表导出</li>
+                <li>保障现场 Demo 流畅稳定运行</li>
               </ul>
             </Card>
           </Col>
@@ -290,7 +290,7 @@ export default function LandingPage() {
         </Text>
         <br />
         <Text style={{ color: '#8b7355', fontSize: 12 }}>
-          赛道独家 · 真实小学生视角 · AI语义分级 · 图书馆可落地
+          对接课标 · AI语义分级 · 真实用户视角 · 图书馆可落地
         </Text>
       </div>
     </div>

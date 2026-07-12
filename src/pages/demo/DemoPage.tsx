@@ -64,7 +64,7 @@ export default function DemoPage() {
           基于CADAL古籍资源的义务教育课标智能适配与轻量化重构阅读系统
         </Title>
         <Text type="secondary" style={{ fontSize: 14 }}>
-          全场唯一对接义务教育课标 · AI三层分级重构 · 图书馆可落地试运行
+          对接义务教育课标 · AI三层分级重构 · 图书馆可落地试运行
         </Text>
       </div>
 
@@ -72,8 +72,8 @@ export default function DemoPage() {
       <div style={{ textAlign: 'center', marginBottom: 32 }}>
         <Space wrap size="middle">
           {[
-            { icon: <TrophyOutlined />, text: '赛道独家·无同质化竞品', color: '#c43a31' },
-            { icon: <StarOutlined />, text: '真实小学生视角定义', color: '#b8860b' },
+            { icon: <TrophyOutlined />, text: '教育落地·课标适配', color: '#c43a31' },
+            { icon: <StarOutlined />, text: '真实用户视角定义', color: '#b8860b' },
             { icon: <ExperimentOutlined />, text: 'AI语义分级重构', color: '#5b8c5a' },
             { icon: <CheckCircleOutlined />, text: '馆内可试运行', color: '#2e5984' },
           ].map((item, i) => (
@@ -86,7 +86,7 @@ export default function DemoPage() {
 
       {/* 核心痛点展示 */}
       <Alert
-        message="CADAL 有 280 万册古籍资源，但原文晦涩、无难度分级、不对应中小学课本——现有系统只能看原版，不能服务义务教育。全网空白。"
+        message="CADAL 有 280 万册古籍资源，但原文晦涩、无难度分级、不对应中小学课本——现有系统只能看原版，无法直接服务义务教育。本系统旨在填补这一空白。"
         type="warning"
         showIcon
         style={{ marginBottom: 24, fontSize: 13 }}
@@ -101,10 +101,10 @@ export default function DemoPage() {
           <div style={{ padding: '40px 0' }}>
             <PlayCircleOutlined style={{ fontSize: 72, color: '#c43a31', marginBottom: 16 }} />
             <Title level={3} style={{ color: '#2c1810' }}>
-              5 分钟绝杀路演 Demo
+              5 分钟系统演示 Demo
             </Title>
             <Paragraph type="secondary" style={{ maxWidth: 600, margin: '0 auto 24px' }}>
-              随机调取一篇 CADAL 古籍 → 一键匹配课标 → AI 三层重构 → 自动考点拆解 → 研学任务落地
+              随机调取一篇 CADAL 古籍 → 匹配课标 → AI 三层重构 → 考点拆解 → 研学任务落地
             </Paragraph>
             <Button
               size="large"
@@ -120,7 +120,7 @@ export default function DemoPage() {
                 borderRadius: 8,
               }}
             >
-              开始路演 Demo
+              开始演示 Demo
             </Button>
           </div>
         )}
@@ -310,7 +310,7 @@ export default function DemoPage() {
                     </div>
                   ))}
                   <Alert
-                    message="碾压点：全场唯一实现「课本知识点 ↔ CADAL古籍」精准联动的系统，所有浙大队伍做不到。"
+                    message="实现「课本知识点 ↔ CADAL古籍」精准联动，自动匹配拓展阅读资源。"
                     type="info"
                     showIcon
                     style={{ marginTop: 8, fontSize: 12 }}
@@ -408,27 +408,27 @@ export default function DemoPage() {
                 重新演示
               </Button>
               <Button size="large" type="primary" icon={<DownloadOutlined />}>
-                导出完整路演资料包
+                导出演示资料包
               </Button>
             </div>
           </div>
         )}
       </Card>
 
-      {/* 底部：为什么这个方案能赢 */}
+      {/* 底部：项目核心优势分析 */}
       <Card
         className="parchment-card"
-        title="🏆 为什么能碾压浙大普通参赛队？"
+        title="🏆 项目核心优势"
         style={{ marginTop: 24 }}
       >
         <Row gutter={[16, 16]}>
           {[
-            { icon: '🎯', title: '赛道独家', desc: '别人拼校对、策展、检索；我们拼教育落地+AI重构+课标适配，赛道完全空白' },
-            { icon: '👧', title: '视角不可复制', desc: '全场唯一由真实小学生定义需求，浙大成年人永远不懂儿童阅读痛点' },
-            { icon: '🤖', title: '技术含金量充足', desc: 'AI语义分级、文本重构，不是简易小程序，技术水平对标高校竞赛' },
-            { icon: '🏫', title: '落地性满分', desc: '线上系统+纸质研学手册+馆内展陈，完全满足赛事试运行硬性要求' },
-            { icon: '⭐', title: '评分均衡高分', desc: '创新、技术、落地、路演四项维度全部拉满，无短板' },
-            { icon: '🔥', title: '年龄反差绝杀', desc: '五年级核心创始人+浙大技术搭档，评委印象分直接拉满' },
+            { icon: '🎯', title: '教育落地导向', desc: '聚焦教育落地与AI重构、课标适配，直接服务于义务教育实际需求' },
+            { icon: '👧', title: '真实用户视角', desc: '由真实小学生参与需求定义，从一线使用者角度理解古籍阅读痛点' },
+            { icon: '🤖', title: '技术体系完整', desc: 'AI语义分级、文本重构、课标匹配等多项技术协同，构成完整解决方案' },
+            { icon: '🏫', title: '落地性强', desc: '线上系统+研学手册+馆内展陈，满足赛事试运行和展陈的硬性要求' },
+            { icon: '📊', title: '数据底座扎实', desc: '内置126篇课内古诗文数据库，基于2022版课标三学段分级标准' },
+            { icon: '🤝', title: '双人优势互补', desc: '五年级用户视角需求定义 + 大学生技术开发，视角与能力互补' },
           ].map((item, i) => (
             <Col xs={24} sm={12} lg={8} key={i}>
               <Card size="small" style={{ background: '#faf5eb', height: '100%' }}>
@@ -441,10 +441,10 @@ export default function DemoPage() {
         </Row>
       </Card>
 
-      {/* 答辩绝杀话术 */}
+      {/* 项目理念 */}
       <Card
         className="parchment-card"
-        title="💬 答辩绝杀话术（应对浙大对手质疑）"
+        title="💬 项目理念"
         style={{ marginTop: 16 }}
       >
         <blockquote style={{
@@ -455,9 +455,9 @@ export default function DemoPage() {
           margin: 0,
         }}>
           <Text style={{ fontSize: 14, lineHeight: 2 }}>
-            "图书馆CADAL资源的最终价值是<b>落地服务读者</b>，不是单纯堆砌技术。
-            所有复杂学术模型无法下沉到义务教育，而我们的系统是<b>全场唯一</b>真正对接课标、
-            服务小学生、可直接馆内试运行的AI古籍工具，<b>落地价值远高于纯理论研究</b>。"
+            "图书馆CADAL资源的最终价值是<b>落地服务读者</b>，而非单纯堆砌技术。
+            本系统致力于将学术资源下沉到义务教育，真正对接课标、服务学生、
+            支持教师备课，实现<b>古籍数字化资源在教学场景中的实际应用</b>。"
           </Text>
         </blockquote>
       </Card>
