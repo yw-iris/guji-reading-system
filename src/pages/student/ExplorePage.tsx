@@ -1,14 +1,15 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import {
   Card,
   Row,
   Col,
-  Input,
+  AutoComplete,
   Tag,
   Select,
   Typography,
   Button,
   Empty,
+  message,
 } from 'antd';
 import {
   SearchOutlined,
@@ -16,6 +17,8 @@ import {
   ClockCircleOutlined,
   RightOutlined,
   FilterOutlined,
+  AudioOutlined,
+  AudioMutedOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../../stores/appStore';
@@ -37,43 +40,242 @@ const gradeColors: Record<number, string> = {
   4: '#51cf66', 5: '#845ef7', 6: '#f06595',
 };
 
+// 页面级国风配色常量
+const STYLE = {
+  bg: '#fdfaf3',
+  cardBg: '#fffef9',
+  cardBorder: '#e8d5b8',
+  titleColor: '#2c1810',
+  accentGold: '#b8860b',
+  accentRed: '#c43a31',
+  subtleBg: '#faf5eb',
+};
+
+// AutoComplete 下拉选项类型
+interface AutoCompleteOption {
+  value: string;
+  label: React.ReactNode;
+  text: AncientText;
+}
+
 export default function ExplorePage() {
   const navigate = useNavigate();
-  const { searchKeyword, setSearchKeyword, selectedGrade, setSelectedGrade, setCurrentText } = useAppStore();
+  const { searchKeyword, setSearchKeyword, selectedGrade, setSelectedGrade, setCurrentText, texts, setTexts, getFilteredTexts } = useAppStore();
   const [selectedDynasty, setSelectedDynasty] = useState<string | null>(null);
 
-  // 筛选逻辑
-  const filteredTexts = useMemo(() => {
-    let result = [...mockTexts];
-    if (searchKeyword) {
-      const kw = searchKeyword.toLowerCase();
-      result = result.filter(
+  // 初始化 texts 到 store
+  useEffect(() => {
+    if (texts.length === 0) {
+      setTexts(mockTexts);
+    }
+  }, [texts.length, setTexts]);
+
+  // 使用缓存筛选逻辑
+  const filteredTexts = getFilteredTexts({
+    grade: selectedGrade,
+    dynasty: selectedDynasty,
+    keyword: searchKeyword,
+  });
+
+  // AutoComplete 联想选项
+  const autoCompleteOptions = useMemo<AutoCompleteOption[]>(() => {
+    if (!searchKeyword) return [];
+    const kw = searchKeyword.toLowerCase();
+    return mockTexts
+      .filter(
         (t) =>
-          t.title.includes(kw) ||
-          t.author.includes(kw) ||
-          t.tags.some((tag) => tag.includes(kw))
-      );
+          t.title.toLowerCase().includes(kw) ||
+          t.author.toLowerCase().includes(kw) ||
+          t.tags.some((tag) => tag.toLowerCase().includes(kw))
+      )
+      .slice(0, 8)
+      .map((t) => ({
+        value: t.title,
+        label: (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0' }}>
+            <span style={{ fontWeight: 600, color: STYLE.titleColor }}>{t.title}</span>
+            <span style={{ color: '#8b7355', fontSize: 12, marginLeft: 12 }}>
+              {t.dynasty} · {t.author}
+            </span>
+          </div>
+        ),
+        text: t,
+      }));
+  }, [searchKeyword]);
+
+  // 无结果时的相似古籍推荐
+  const recommendedTexts = useMemo<AncientText[]>(() => {
+    if (filteredTexts.length > 0) return [];
+    // 计算每篇古籍与当前筛选条件的匹配分
+    const scored = mockTexts.map((t) => {
+      let score = 0;
+      if (selectedDynasty && t.dynasty === selectedDynasty) score += 3;
+      if (selectedGrade && t.gradeLevel.includes(selectedGrade as GradeLevel)) score += 3;
+      if (searchKeyword) {
+        const kw = searchKeyword.toLowerCase();
+        // 标签匹配加权
+        const tagMatch = t.tags.filter((tag) => tag.toLowerCase().includes(kw)).length;
+        score += tagMatch * 2;
+        // 标题/作者部分匹配
+        if (t.title.toLowerCase().includes(kw) || t.author.toLowerCase().includes(kw)) score += 1;
+      }
+      return { text: t, score };
+    });
+    // 按分数降序，取前 6 个有分的
+    return scored
+      .filter((s) => s.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 6)
+      .map((s) => s.text);
+  }, [filteredTexts.length, searchKeyword, selectedGrade, selectedDynasty]);
+
+  // 语音搜书
+  const speechSupported = typeof window !== 'undefined' && (!!window.SpeechRecognition || !!window.webkitSpeechRecognition);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+
+  const stopListening = useCallback(() => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
     }
-    if (selectedGrade) {
-      result = result.filter((t) => t.gradeLevel.includes(selectedGrade as GradeLevel));
+    setIsListening(false);
+  }, []);
+
+  const startListening = useCallback(() => {
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognitionAPI) {
+      message.warning('您的浏览器不支持语音识别');
+      return;
     }
-    if (selectedDynasty) {
-      result = result.filter((t) => t.dynasty === selectedDynasty);
+    try {
+      const recognition = new SpeechRecognitionAPI();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'zh-CN';
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
+        const transcript = event.results[0][0].transcript;
+        setSearchKeyword(transcript);
+        stopListening();
+      };
+      recognition.onerror = () => {
+        message.error('语音识别失败，请重试');
+        stopListening();
+      };
+      recognition.onend = () => {
+        setIsListening(false);
+        recognitionRef.current = null;
+      };
+      recognitionRef.current = recognition;
+      recognition.start();
+      setIsListening(true);
+    } catch {
+      message.error('无法启动语音识别');
     }
-    return result;
-  }, [searchKeyword, selectedGrade, selectedDynasty]);
+  }, [setSearchKeyword, stopListening]);
+
+  const handleVoiceClick = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  };
+
+  const handleSelect = (value: string, option: { value: string; text: AncientText }) => {
+    setSearchKeyword(value);
+    setCurrentText(option.text);
+    navigate(`/student/reading/${option.text.id}`);
+  };
 
   const handleStartReading = (text: AncientText) => {
     setCurrentText(text);
     navigate(`/student/reading/${text.id}`);
   };
 
+  // 古籍卡片渲染函数
+  const renderTextCard = (text: AncientText, idx: number) => (
+    <Col xs={24} sm={12} lg={8} key={text.id}>
+      <Card
+        className="parchment-card fade-in"
+        style={{
+          animationDelay: `${idx * 0.08}s`,
+          height: '100%',
+          background: STYLE.cardBg,
+          border: `1px solid ${STYLE.cardBorder}`,
+          borderRadius: 12,
+          boxShadow: '0 2px 12px rgba(44,24,16,0.04)',
+        }}
+        hoverable
+        onClick={() => handleStartReading(text)}
+        actions={[
+          <Button type="link" icon={<RightOutlined />} key="read">
+            开始阅读
+          </Button>,
+        ]}
+      >
+        {/* 朝代标签 */}
+        <div style={{ marginBottom: 12 }}>
+          <Tag color={dynastyColors[text.dynasty] || '#8b6914'}>
+            {text.dynasty}
+          </Tag>
+          {text.tags.slice(0, 3).map((tag) => (
+            <Tag key={tag} style={{ marginBottom: 4 }}>
+              {tag}
+            </Tag>
+          ))}
+        </div>
+
+        {/* 标题 */}
+        <Title level={4} style={{ color: STYLE.titleColor, marginBottom: 8 }}>
+          {text.title}
+        </Title>
+        <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
+          {text.author} · {text.dynasty}
+        </Text>
+
+        {/* 适配年级 */}
+        <div style={{ marginBottom: 8 }}>
+          <Text style={{ fontSize: 12, color: STYLE.accentGold }}>适配年级：</Text>
+          {text.gradeLevel.map((g) => (
+            <Tag
+              key={g}
+              color={gradeColors[g]}
+              style={{ marginBottom: 4, fontSize: 11 }}
+            >
+              {g}年级
+            </Tag>
+          ))}
+        </div>
+
+        {/* 课标匹配 */}
+        {text.textbookMatch.length > 0 && (
+          <Paragraph
+            type="secondary"
+            style={{ fontSize: 12, marginBottom: 0 }}
+            ellipsis={{ rows: 2 }}
+          >
+            <BookOutlined /> 课本对应：
+            {text.textbookMatch.map((m) => `${m.grade}年级${m.semester}学期《${m.lessonName}》`).join('、')}
+          </Paragraph>
+        )}
+
+        {/* CADAL 标识 */}
+        <div style={{ marginTop: 12 }}>
+          <Text style={{ fontSize: 11, color: STYLE.accentGold }}>
+            <ClockCircleOutlined /> CADAL: {text.cadalId}
+          </Text>
+        </div>
+      </Card>
+    </Col>
+  );
+
   return (
-    <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
+    <div className="explore-page" style={{ padding: 24, maxWidth: 1200, margin: '0 auto', background: STYLE.bg, minHeight: '100vh' }}>
       {/* 页面标题 */}
       <div style={{ marginBottom: 24 }}>
-        <Title level={2} style={{ color: '#2c1810', marginBottom: 4 }}>
-          📜 古籍探索
+        <Title level={2} style={{ color: STYLE.titleColor, marginBottom: 4 }}>
+          古籍探索
         </Title>
         <Text type="secondary">
           从 CADAL 古籍库中探索与课本对应的古诗文，AI 帮你读懂每一篇
@@ -82,21 +284,78 @@ export default function ExplorePage() {
 
       {/* 搜索与筛选栏 */}
       <Card
-        className="parchment-card"
-        style={{ marginBottom: 24 }}
+        className="explore-search-card"
+        style={{
+          marginBottom: 24,
+          background: STYLE.cardBg,
+          border: `1px solid ${STYLE.cardBorder}`,
+          borderRadius: 12,
+          boxShadow: '0 2px 12px rgba(44,24,16,0.04)',
+        }}
       >
         <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} sm={12} md={8}>
-            <Input
-              size="large"
-              placeholder="搜索古籍名称、作者、标签..."
-              prefix={<SearchOutlined style={{ color: '#b8860b' }} />}
+          <Col xs={24} sm={24} md={8} className="explore-search-col" style={{ position: 'relative' }}>
+            <AutoComplete
+              style={{ width: '100%' }}
+              options={autoCompleteOptions}
               value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
-              style={{ borderRadius: 8 }}
+              onChange={setSearchKeyword}
+              onSelect={handleSelect}
+              defaultActiveFirstOption={false}
+              popupClassName="explore-autocomplete-dropdown"
+            >
+              <input
+                placeholder="搜索古籍名称、作者、标签..."
+                style={{
+                  width: '100%',
+                  height: 40,
+                  paddingLeft: 36,
+                  paddingRight: 12,
+                  borderRadius: 8,
+                  border: '1px solid #d9d9d9',
+                  fontSize: 16,
+                  outline: 'none',
+                  transition: 'border-color 0.3s',
+                  background: '#fff',
+                }}
+                onFocus={(e) => {
+                  (e.target as HTMLInputElement).style.borderColor = '#b8860b';
+                }}
+                onBlur={(e) => {
+                  (e.target as HTMLInputElement).style.borderColor = '#d9d9d9';
+                }}
+              />
+            </AutoComplete>
+            <SearchOutlined
+              style={{
+                position: 'absolute',
+                left: 20,
+                top: 18,
+                zIndex: 1,
+                color: STYLE.accentGold,
+                fontSize: 16,
+                pointerEvents: 'none',
+              }}
             />
+            {/* 语音搜书按钮 */}
+            {speechSupported && (
+              <Button
+                type="text"
+                icon={isListening ? <AudioMutedOutlined /> : <AudioOutlined />}
+                onClick={handleVoiceClick}
+                style={{
+                  position: 'absolute',
+                  right: 8,
+                  top: 6,
+                  zIndex: 1,
+                  color: isListening ? '#c43a31' : STYLE.accentGold,
+                  fontSize: 16,
+                  animation: isListening ? 'voicePulse 1s infinite' : 'none',
+                }}
+              />
+            )}
           </Col>
-          <Col xs={12} sm={6} md={4}>
+          <Col xs={12} sm={12} md={4}>
             <Select
               size="large"
               placeholder="选择年级"
@@ -111,7 +370,7 @@ export default function ExplorePage() {
               ))}
             </Select>
           </Col>
-          <Col xs={12} sm={6} md={4}>
+          <Col xs={12} sm={12} md={4}>
             <Select
               size="large"
               placeholder="选择朝代"
@@ -126,7 +385,7 @@ export default function ExplorePage() {
               <Option value="战国">战国</Option>
             </Select>
           </Col>
-          <Col flex="auto">
+          <Col xs={24} md={8}>
             <Text type="secondary">
               共找到 <Text strong>{filteredTexts.length}</Text> 篇古籍
             </Text>
@@ -135,79 +394,78 @@ export default function ExplorePage() {
       </Card>
 
       {/* 古籍列表 */}
-      {filteredTexts.length === 0 ? (
+      {filteredTexts.length === 0 && recommendedTexts.length === 0 ? (
         <Empty description="没有找到匹配的古籍" style={{ marginTop: 80 }} />
+      ) : filteredTexts.length === 0 ? (
+        /* 无精确结果时展示相似古籍推荐 */
+        <div>
+          <Card
+            style={{
+              marginBottom: 24,
+              background: STYLE.subtleBg,
+              border: `1px solid ${STYLE.cardBorder}`,
+              borderRadius: 12,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <SearchOutlined style={{ color: STYLE.accentGold, fontSize: 16 }} />
+              <Text style={{ color: STYLE.titleColor, fontSize: 15, fontWeight: 500 }}>
+                没有找到完全匹配的古籍，以下是为你推荐的同类古籍：
+              </Text>
+            </div>
+            {searchKeyword && (
+              <Text type="secondary" style={{ fontSize: 13, marginLeft: 24 }}>
+                关键词「{searchKeyword}」
+                {selectedDynasty && ` · ${selectedDynasty}代`}
+                {selectedGrade && ` · ${selectedGrade}年级`}
+              </Text>
+            )}
+          </Card>
+          <Row gutter={[16, 16]}>
+            {recommendedTexts.map((text, idx) => renderTextCard(text, idx))}
+          </Row>
+        </div>
       ) : (
         <Row gutter={[16, 16]}>
-          {filteredTexts.map((text, idx) => (
-            <Col xs={24} sm={12} lg={8} key={text.id}>
-              <Card
-                className="parchment-card fade-in"
-                style={{ animationDelay: `${idx * 0.08}s`, height: '100%' }}
-                hoverable
-                onClick={() => handleStartReading(text)}
-                actions={[
-                  <Button type="link" icon={<RightOutlined />} key="read">
-                    开始阅读
-                  </Button>,
-                ]}
-              >
-                {/* 朝代标签 */}
-                <div style={{ marginBottom: 12 }}>
-                  <Tag color={dynastyColors[text.dynasty] || '#8b6914'}>
-                    {text.dynasty}
-                  </Tag>
-                  {text.tags.slice(0, 3).map((tag) => (
-                    <Tag key={tag} style={{ marginBottom: 4 }}>
-                      {tag}
-                    </Tag>
-                  ))}
-                </div>
-
-                {/* 标题 */}
-                <Title level={4} style={{ color: '#2c1810', marginBottom: 8 }}>
-                  {text.title}
-                </Title>
-                <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
-                  {text.author} · {text.dynasty}
-                </Text>
-
-                {/* 适配年级 */}
-                <div style={{ marginBottom: 8 }}>
-                  <Text style={{ fontSize: 12, color: '#8b6914' }}>适配年级：</Text>
-                  {text.gradeLevel.map((g) => (
-                    <Tag
-                      key={g}
-                      color={gradeColors[g]}
-                      style={{ marginBottom: 4, fontSize: 11 }}
-                    >
-                      {g}年级
-                    </Tag>
-                  ))}
-                </div>
-
-                {/* 课标匹配 */}
-                {text.textbookMatch.length > 0 && (
-                  <Paragraph
-                    type="secondary"
-                    style={{ fontSize: 12, marginBottom: 0 }}
-                    ellipsis={{ rows: 2 }}
-                  >
-                    <BookOutlined /> 课本对应：
-                    {text.textbookMatch.map((m) => `${m.grade}年级${m.semester}学期《${m.lessonName}》`).join('、')}
-                  </Paragraph>
-                )}
-
-                {/* CADAL 标识 */}
-                <div style={{ marginTop: 12 }}>
-                  <Text style={{ fontSize: 11, color: '#b8860b' }}>
-                    <ClockCircleOutlined /> CADAL: {text.cadalId}
-                  </Text>
-                </div>
-              </Card>
-            </Col>
-          ))}
+          {filteredTexts.map((text, idx) => renderTextCard(text, idx))}
         </Row>
+      )}
+
+      {/* 移动端响应式样式 */}
+      <style>{`
+        @keyframes voicePulse {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.2); opacity: 0.7; }
+        }
+        @media (max-width: 768px) {
+          .explore-page {
+            padding: 16px 12px !important;
+          }
+          .explore-search-card .ant-card-body {
+            padding: 16px !important;
+          }
+          .explore-autocomplete-dropdown {
+            min-width: 280px !important;
+            max-width: calc(100vw - 32px) !important;
+          }
+        }
+      `}</style>
+
+      {/* 为你推荐 */}
+      {filteredTexts.length > 0 && (
+        <div style={{ marginTop: 40 }}>
+          <div style={{ marginBottom: 16 }}>
+            <Text style={{ color: STYLE.titleColor, fontSize: 18, fontWeight: 600 }}>
+              ✨ 为你推荐
+            </Text>
+          </div>
+          <Row gutter={[16, 16]}>
+            {mockTexts
+              .sort(() => Math.random() - 0.5)
+              .slice(0, 3)
+              .map((text, idx) => renderTextCard(text, idx))}
+          </Row>
+        </div>
       )}
     </div>
   );

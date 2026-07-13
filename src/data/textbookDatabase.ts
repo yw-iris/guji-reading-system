@@ -41,7 +41,7 @@ export const schoolStageStandards: SchoolStageStandard[] = [
   },
 ];
 
-// ---- 完整古诗文数据库（112首古诗 + 14篇文言文 = 126篇） ----
+// ---- 完整古诗文数据库（86篇） ----
 export interface TextbookPoem {
   id: string;
   title: string;                        // 诗题
@@ -90,7 +90,7 @@ export const textbookPoems: TextbookPoem[] = [
   { id: 'pep-2b-02', title: '咏柳', author: '贺知章', dynasty: '唐', grade: 2, semester: '下', type: '古诗', stage: 1, keywords: ['柳树', '春天', '咏物'], cadalMatchHints: ['唐代咏物诗', '贺知章诗集'], isExamKey: true },
   { id: 'pep-2b-03', title: '赋得古原草送别（节选）', author: '白居易', dynasty: '唐', grade: 2, semester: '下', type: '古诗', stage: 1, keywords: ['草', '送别', '生命力'], cadalMatchHints: ['白居易诗集', '唐代送别诗'], isExamKey: false },
   { id: 'pep-2b-04', title: '晓出净慈寺送林子方', author: '杨万里', dynasty: '宋', grade: 2, semester: '下', type: '古诗', stage: 1, keywords: ['荷花', '夏天', '送别', '西湖'], cadalMatchHints: ['杨万里诗集', '西湖方志'], isExamKey: true },
-  { id: 'pep-2b-05', title: '绝句', author: '杜甫', dynasty: '唐', grade: 2, semester: '下', type: '古诗', stage: 1, keywords: ['春天', '鸟', '山水'], cadalMatchHints: ['杜甫诗集', '唐代绝句'], isExamKey: true },
+  { id: 'pep-2b-05', title: '绝句（两个黄鹂鸣翠柳）', author: '杜甫', dynasty: '唐', grade: 2, semester: '下', type: '古诗', stage: 1, keywords: ['春天', '鸟', '山水'], cadalMatchHints: ['杜甫诗集', '唐代绝句'], isExamKey: true },
   { id: 'pep-2b-06', title: '舟夜书所见', author: '查慎行', dynasty: '清', grade: 2, semester: '下', type: '古诗', stage: 1, keywords: ['夜景', '舟行', '渔火'], cadalMatchHints: ['清代山水诗'], isExamKey: false },
 
   // ========== 三年级上册 ==========
@@ -103,7 +103,7 @@ export const textbookPoems: TextbookPoem[] = [
   { id: 'pep-3a-07', title: '采桑子', author: '欧阳修', dynasty: '宋', grade: 3, semester: '上', type: '词', stage: 2, keywords: ['西湖', '春天', '词'], cadalMatchHints: ['欧阳修词集', '宋代词'], isExamKey: false },
 
   // ========== 三年级下册 ==========
-  { id: 'pep-3b-01', title: '绝句', author: '杜甫', dynasty: '唐', grade: 3, semester: '下', type: '古诗', stage: 2, keywords: ['春天', '燕子', '杜甫'], cadalMatchHints: ['杜甫诗集', '唐代绝句'], isExamKey: true },
+  { id: 'pep-3b-01', title: '绝句（迟日江山丽）', author: '杜甫', dynasty: '唐', grade: 3, semester: '下', type: '古诗', stage: 2, keywords: ['春天', '燕子', '杜甫'], cadalMatchHints: ['杜甫诗集', '唐代绝句'], isExamKey: true },
   { id: 'pep-3b-02', title: '惠崇春江晚景', author: '苏轼', dynasty: '宋', grade: 3, semester: '下', type: '古诗', stage: 2, keywords: ['春天', '江景', '苏轼', '题画'], cadalMatchHints: ['苏轼诗集', '宋代题画诗'], isExamKey: true },
   { id: 'pep-3b-03', title: '三衢道中', author: '曾几', dynasty: '宋', grade: 3, semester: '下', type: '古诗', stage: 2, keywords: ['夏天', '山林', '游记'], cadalMatchHints: ['宋代游记诗'], isExamKey: false },
   { id: 'pep-3b-04', title: '忆江南', author: '白居易', dynasty: '唐', grade: 3, semester: '下', type: '词', stage: 2, keywords: ['江南', '春天', '白居易'], cadalMatchHints: ['白居易诗集', '江南方志'], isExamKey: true },

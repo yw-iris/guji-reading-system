@@ -123,3 +123,102 @@ body {
 .fade-in {
   animation: fadeIn 0.5s ease forwards;
 }
+
+/* ===== 移动端全局响应式样式 ===== */
+@media (max-width: 768px) {
+  /* 触摸友好的按钮尺寸：最小 44px */
+  .ant-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .ant-btn-sm {
+    min-height: 36px;
+    min-width: 36px;
+  }
+  .ant-btn-lg {
+    min-height: 48px;
+    min-width: 48px;
+  }
+
+  /* 文字行间距优化 */
+  body {
+    line-height: 1.8;
+  }
+  .ant-typography {
+    line-height: 1.8;
+  }
+
+  /* 卡片在移动端的内边距调整 */
+  .ant-card {
+    border-radius: 10px;
+  }
+  .ant-card-body {
+    padding: 12px !important;
+  }
+  .ant-card-head {
+    padding: 0 12px;
+    min-height: 40px;
+  }
+  .ant-card-head-title {
+    font-size: 15px;
+  }
+
+  /* 分段控件适配 */
+  .ant-segmented {
+    font-size: 12px;
+  }
+
+  /* 标签适配 */
+  .ant-tag {
+    font-size: 11px;
+    padding: 1px 6px;
+    line-height: 18px;
+  }
+
+  /* 表格横向滚动 */
+  .ant-table-wrapper {
+    overflow-x: auto;
+  }
+
+  /* 分页器适配 */
+  .ant-pagination {
+    font-size: 12px;
+  }
+  .ant-pagination-item {
+    min-width: 32px;
+    height: 32px;
+    line-height: 30px;
+  }
+
+  /* 描述列表适配 */
+  .ant-descriptions-item-label,
+  .ant-descriptions-item-content {
+    font-size: 13px;
+    padding: 8px 10px !important;
+  }
+
+  /* Tabs 标签适配 */
+  .ant-tabs-tab {
+    font-size: 13px;
+    padding: 8px 12px !important;
+  }
+
+  /* 弹窗全宽适配 */
+  .ant-modal {
+    max-width: calc(100vw - 32px);
+    margin: 16px auto;
+  }
+  .ant-modal-content {
+    padding: 16px;
+  }
+
+  /* 消息提示宽度适配 */
+  .ant-message-notice-content {
+    max-width: calc(100vw - 40px);
+  }
+
+  /* 阅读容器移动端适配 */
+  .reading-container {
+    padding: 24px 16px;
+  }
+}

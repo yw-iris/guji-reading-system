@@ -65,13 +65,19 @@ export default function LandingPage() {
             color: '#f5e6d3', fontSize: 44, marginBottom: 4, fontWeight: 800,
             letterSpacing: '0.02em',
           }}>
-            基于 CADAL 古籍资源 的
+            和小学生一起读古诗！
           </Title>
           <Title style={{
-            color: '#b8860b', fontSize: 36, marginTop: 0, marginBottom: 20,
+            color: '#b8860b', fontSize: 36, marginTop: 0, marginBottom: 8,
             fontWeight: 700, letterSpacing: '0.03em',
           }}>
-            义务教育课标智能适配与轻量化重构阅读系统
+            古籍探宝 —— CADAL 古籍课标智能适配阅读系统
+          </Title>
+          <Title level={4} style={{
+            color: '#d4c5b2', marginTop: 0, marginBottom: 20,
+            fontWeight: 400, fontSize: 16,
+          }}>
+            基于 CADAL 280万册古籍资源 · 义务教育课标智能适配与轻量化重构
           </Title>
 
           <Paragraph style={{
@@ -86,47 +92,68 @@ export default function LandingPage() {
           <Space size="middle" wrap>
             <Button
               size="large"
-              type="primary"
-              icon={<ThunderboltOutlined />}
-              onClick={() => navigate('/demo')}
-              style={{
-                background: 'linear-gradient(135deg, #c43a31, #d4544a)',
-                border: 'none',
-                height: 48,
-                padding: '0 32px',
-                fontSize: 16,
-                borderRadius: 8,
-                fontWeight: 500,
-                boxShadow: '0 4px 16px rgba(196,58,49,0.3)',
-              }}
-            >
-              5 分钟系统演示
-            </Button>
-            <Button
-              size="large"
-              icon={<DatabaseOutlined />}
-              onClick={() => navigate('/engine')}
-              style={{
-                height: 48, padding: '0 32px', fontSize: 16, borderRadius: 8,
-                border: '1px solid rgba(184,134,11,0.4)', color: '#b8860b',
-                background: 'rgba(184,134,11,0.06)',
-              }}
-            >
-              课标匹配引擎
-            </Button>
-            <Button
-              size="large"
               icon={<ReadOutlined />}
               onClick={() => enterSystem('student')}
               style={{
-                height: 48, padding: '0 32px', fontSize: 16, borderRadius: 8,
-                border: '1px solid rgba(245,230,211,0.3)', color: '#f5e6d3',
-                background: 'rgba(245,230,211,0.06)',
+                background: 'linear-gradient(135deg, #5b8c5a, #6dae6a)',
+                border: 'none',
+                height: 56,
+                padding: '0 40px',
+                fontSize: 18,
+                borderRadius: 12,
+                fontWeight: 700,
+                boxShadow: '0 6px 24px rgba(91,140,90,0.4)',
               }}
             >
-              进入系统
+              🎒 我是小学生，开始读古诗！
             </Button>
           </Space>
+          <div style={{ marginTop: 20 }}>
+            <Space size="middle" wrap>
+              <Button
+                size="large"
+                type="primary"
+                icon={<ThunderboltOutlined />}
+                onClick={() => navigate('/demo')}
+                style={{
+                  background: 'linear-gradient(135deg, #c43a31, #d4544a)',
+                  border: 'none',
+                  height: 44,
+                  padding: '0 28px',
+                  fontSize: 14,
+                  borderRadius: 8,
+                  fontWeight: 500,
+                  boxShadow: '0 4px 16px rgba(196,58,49,0.3)',
+                }}
+              >
+                5 分钟系统演示
+              </Button>
+              <Button
+                size="large"
+                icon={<DatabaseOutlined />}
+                onClick={() => navigate('/engine')}
+                style={{
+                  height: 44, padding: '0 28px', fontSize: 14, borderRadius: 8,
+                  border: '1px solid rgba(184,134,11,0.4)', color: '#b8860b',
+                  background: 'rgba(184,134,11,0.06)',
+                }}
+              >
+                课标匹配引擎
+              </Button>
+              <Button
+                size="large"
+                icon={<ReadOutlined />}
+                onClick={() => enterSystem('teacher')}
+                style={{
+                  height: 44, padding: '0 28px', fontSize: 14, borderRadius: 8,
+                  border: '1px solid rgba(245,230,211,0.3)', color: '#f5e6d3',
+                  background: 'rgba(245,230,211,0.06)',
+                }}
+              >
+                教师/馆员入口
+              </Button>
+            </Space>
+          </div>
         </div>
       </div>
 

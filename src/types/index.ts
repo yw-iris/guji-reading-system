@@ -38,6 +38,7 @@ export interface TieredContent {
   original: string;                 // 原版繁体
   adapted: string;                  // 简化适配版（按学段调整难度）
   vernacular: string;               // 考点白话解读
+  stageLevel?: SchoolStage;         // 学段标注（primary/junior/senior）
 }
 
 // 生字/考点
@@ -146,4 +147,81 @@ export interface User {
   subject?: string;                 // 教师：所教学科
   school?: string;                  // 教师：学校名称（课外独立教师可填"独立教师"）
   avatar?: string;
+}
+
+// 兑换项目
+export interface RedeemItem {
+  id: string;
+  name: string;
+  description: string;
+  cost: number;
+  icon: string;
+}
+
+// 作品卡片
+export interface WorkCard {
+  id: string;
+  textTitle: string;
+  userName: string;
+  readDate: string;
+  tier: string;
+  textId: string;
+}
+
+// ===== 文言文学习模块 =====
+
+// 文言文语法标注
+export interface WenyanAnnotation {
+  textId: string;                      // 关联古籍ID
+  sentences: WenyanSentence[];         // 逐句标注
+}
+
+export interface WenyanSentence {
+  index: number;                       // 句序号
+  original: string;                    // 原文
+  translation: string;                 // 逐句翻译
+  tokens: WenyanToken[];               // 字词标注
+}
+
+export interface WenyanToken {
+  word: string;                        // 原文词语
+  pinyin?: string;                     // 拼音（生僻字）
+  type: '实词' | '虚词' | '通假字' | '古今异义' | '词类活用' | '特殊句式';  // 语法类型
+  modernMeaning: string;               // 现代汉语释义
+  detail?: string;                     // 详细语法说明
+  relatedChar?: string;                // 通假字对应的本字
+}
+
+// 文言文背景知识
+export interface WenyanBackground {
+  textId: string;
+  source: string;                      // 出处典籍
+  sourceDescription: string;           // 典籍简介
+  authorBio: string;                   // 作者生平
+  historicalContext: string;           // 历史背景
+  relatedStories: RelatedStory[];      // 相关典故
+  mindMap: MindMapNode;                // 思维导图
+}
+
+export interface RelatedStory {
+  title: string;
+  description: string;
+  source: string;
+}
+
+export interface MindMapNode {
+  label: string;
+  children?: MindMapNode[];
+}
+
+// 文言文专项练习
+export interface WenyanExercise {
+  id: string;
+  textId: string;
+  type: '翻译' | '断句' | '虚词选择' | '实词解释' | '默写填空' | '文意理解';
+  question: string;
+  options?: string[];
+  answer: string;
+  analysis: string;
+  difficulty: 1 | 2 | 3;
 }

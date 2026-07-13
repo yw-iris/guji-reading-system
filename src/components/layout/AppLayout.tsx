@@ -14,18 +14,20 @@ import {
   BarChartOutlined,
   ShareAltOutlined,
   ThunderboltOutlined,
+  HomeOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAppStore } from '../../stores/appStore';
 import type { MenuProps } from 'antd';
+import { useState, useEffect } from 'react';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
 
 const studentMenus: MenuProps['items'] = [
-  { key: '/student/explore', icon: <ReadOutlined />, label: '古籍探索' },
-  { key: '/student/reading', icon: <BookOutlined />, label: '我的阅读' },
-  { key: '/student/tasks', icon: <FileTextOutlined />, label: '研学任务' },
+  { key: '/student/explore', icon: <ReadOutlined />, label: '🔍 找古诗' },
+  { key: '/student/reading', icon: <BookOutlined />, label: '📖 我读过的' },
+  { key: '/student/tasks', icon: <FileTextOutlined />, label: '✏️ 我的作业' },
 ];
 
 const teacherMenus: MenuProps['items'] = [
@@ -66,10 +68,31 @@ export default function AppLayout() {
   const location = useLocation();
   const { userRole, sidebarCollapsed, toggleSidebar, switchRole, currentUser } = useAppStore();
 
-  const menus = 
-    userRole === 'student' ? studentMenus :
-    userRole === 'teacher' ? teacherMenus :
-    librarianMenus;
+  // 移动端检测：屏幕宽度 < 768px 时默认折叠侧边栏
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // 移动端默认折叠侧边栏（仅首次检测时触发一次）
+  useEffect(() => {
+    if (isMobile && !sidebarCollapsed) {
+      toggleSidebar();
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const homeItem = { key: '/landing', icon: <HomeOutlined />, label: '首页' };
+  const roleMenus: Record<string, MenuProps['items']> = {
+    student: studentMenus,
+    teacher: teacherMenus,
+    librarian: librarianMenus,
+  };
+  const menus: MenuProps['items'] = [homeItem, ...(roleMenus[userRole] || [])];
 
   const roleInfo = roleLabels[userRole];
 
@@ -96,8 +119,9 @@ export default function AppLayout() {
           borderRight: '1px solid #5c4a3a',
         }}
       >
-        {/* Logo */}
+        {/* Logo - 点击返回首页 */}
         <div
+          onClick={() => navigate('/landing')}
           style={{
             height: 64,
             display: 'flex',
@@ -105,7 +129,12 @@ export default function AppLayout() {
             justifyContent: 'center',
             borderBottom: '1px solid #5c4a3a',
             padding: '0 16px',
+            cursor: 'pointer',
+            transition: 'opacity 0.2s',
           }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.opacity = '0.8'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.opacity = '1'; }}
+          title="返回首页"
         >
           {sidebarCollapsed ? (
             <span className="seal" style={{ width: 36, height: 36, fontSize: 11 }}>古籍</span>
@@ -170,6 +199,7 @@ export default function AppLayout() {
       <Layout>
         {/* 顶部栏 */}
         <Header
+          className="app-header"
           style={{
             background: '#fdfaf3',
             borderBottom: '1px solid #d4c5b2',
@@ -187,7 +217,7 @@ export default function AppLayout() {
             style={{ fontSize: 16, width: 40, height: 40 }}
           />
 
-          <Space>
+          <Space className="app-header-info">
             <Text type="secondary" style={{ fontSize: 13 }}>
               {roleInfo.emoji} {roleInfo.info(currentUser || {})}
             </Text>
@@ -211,6 +241,22 @@ export default function AppLayout() {
           <Outlet />
         </Content>
       </Layout>
+
+      {/* 移动端响应式样式 */}
+      <style>{`
+        @media (max-width: 768px) {
+          .app-header {
+            padding: 0 12px !important;
+            height: 56px !important;
+          }
+          .app-header-info {
+            gap: 4px !important;
+          }
+          .app-header-info .ant-typography {
+            font-size: 11px !important;
+          }
+        }
+      `}</style>
     </Layout>
   );
 }

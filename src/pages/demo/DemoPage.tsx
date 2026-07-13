@@ -11,6 +11,7 @@ import {
   ScanOutlined, RobotOutlined, ReadOutlined, BarChartOutlined,
 } from '@ant-design/icons';
 import { mockTexts, mockTieredContent } from '../../utils/mockData';
+import { prebuiltDemos } from '../../data/prebuiltDemos';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -28,9 +29,9 @@ export default function DemoPage() {
   const [isRunning, setIsRunning] = useState(false);
   const [showResult, setShowResult] = useState(false);
 
-  // 路演用古籍：选一篇有代表性的
+  // 路演用古籍：选一篇有代表性的，异常时 fallback 到 prebuiltDemos
   const demoText = mockTexts.find(t => t.id === 'text-005') || mockTexts[4]; // 论语
-  const tieredContent = mockTieredContent[demoText?.id || 'text-005'];
+  const tieredContent = (demoText?.id ? mockTieredContent[demoText.id] : undefined) || prebuiltDemos[0]?.tieredContent;
 
   const startDemo = () => {
     setIsRunning(true);

@@ -1,5 +1,51 @@
 import { create } from 'zustand';
-import type { User, UserRole, AncientText, ReadingRecord, StudyTask, LearningStats, TextTier, LessonPlan, TeachingStats } from '../types';
+import type { User, UserRole, AncientText, ReadingRecord, StudyTask, LearningStats, TextTier, LessonPlan, TeachingStats, GradeLevel } from '../types';
+
+// ===== 古籍列���筛选缓存 =====
+const textCache: Record<string, AncientText[]> = {};
+const cacheTimestamp: Record<string, number> = {};
+const CACHE_TTL = 5 * 60 * 1000; // 5 分钟过期
+
+function buildCacheKey(filters: { grade?: number | null; dynasty?: string | null; keyword?: string }): string {
+  return `${filters.grade ?? 'all'}|${filters.dynasty ?? 'all'}|${filters.keyword ?? ''}`;
+}
+
+function getFilteredTextsFromCache(
+  allTexts: AncientText[],
+  filters: { grade?: number | null; dynasty?: string | null; keyword?: string }
+): AncientText[] {
+  const key = buildCacheKey(filters);
+  const now = Date.now();
+
+  // 检查缓存是否有效
+  if (textCache[key] && cacheTimestamp[key] && (now - cacheTimestamp[key] < CACHE_TTL)) {
+    return textCache[key];
+  }
+
+  // 执行筛选
+  let result = [...allTexts];
+  if (filters.keyword) {
+    const kw = filters.keyword.toLowerCase();
+    result = result.filter(
+      (t) =>
+        t.title.includes(kw) ||
+        t.author.includes(kw) ||
+        t.tags.some((tag) => tag.includes(kw))
+    );
+  }
+  if (filters.grade) {
+    result = result.filter((t) => t.gradeLevel.includes(filters.grade as GradeLevel));
+  }
+  if (filters.dynasty) {
+    result = result.filter((t) => t.dynasty === filters.dynasty);
+  }
+
+  // 写入缓存
+  textCache[key] = result;
+  cacheTimestamp[key] = now;
+
+  return result;
+}
 
 // ===== 全局状态管理 =====
 
@@ -57,9 +103,16 @@ interface AppState {
   // 学段筛选
   selectedSchoolStage: string | null;
   setSelectedSchoolStage: (stage: string | null) => void;
+
+  // 缓存筛选
+  getFilteredTexts: (filters: { grade?: number | null; dynasty?: string | null; keyword?: string }) => AncientText[];
+
+  // 积分系统
+  points: number;
+  addPoints: (n: number) => void;
 }
 
-export const useAppStore = create<AppState>((set) => ({
+export const useAppStore = create<AppState>((set, get) => ({
   currentUser: null,
   userRole: 'student',
   setUser: (user) => set({ currentUser: user, userRole: user.role }),
@@ -69,7 +122,7 @@ export const useAppStore = create<AppState>((set) => ({
   setTexts: (texts) => set({ texts }),
 
   currentText: null,
-  currentTier: 'adapted',
+  currentTier: 'vernacular',
   setCurrentText: (text) => set({ currentText: text }),
   setCurrentTier: (tier) => set({ currentTier: tier }),
 
@@ -104,4 +157,12 @@ export const useAppStore = create<AppState>((set) => ({
 
   selectedSchoolStage: null,
   setSelectedSchoolStage: (stage) => set({ selectedSchoolStage: stage }),
+
+  getFilteredTexts: (filters) => getFilteredTextsFromCache(get().texts, filters),
+
+  points: 0,
+  addPoints: (n) => set((state) => ({ points: state.points + n })),
 }));
+
+// 将 getFilteredTextsFromCache 也导出供外部使用
+export { getFilteredTextsFromCache };
