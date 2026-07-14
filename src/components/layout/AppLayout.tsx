@@ -152,6 +152,7 @@ export default function AppLayout() {
 
         {/* 菜单 */}
         <Menu
+          className="gj-sider-menu"
           theme="dark"
           mode="inline"
           selectedKeys={[location.pathname]}

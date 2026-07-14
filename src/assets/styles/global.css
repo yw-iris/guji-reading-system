@@ -350,3 +350,220 @@ body {
     padding: 24px 16px;
   }
 }
+
+/* ============================================================
+   统一设计语言 v2 —— 古籍探宝（引用自有站点色板）
+   主色：宣纸白 #fdfaf3 / 墨黑 #2c1810 / 朱红 #c43a31
+   辅助：青绿 #5b8c5a（正向）/ 金色 #b8860b（成就）/ 暖褐 #8b7355（次级）
+   动效缓动：cubic-bezier(0.25, 0.46, 0.45, 0.94)，单段 ≤400ms
+   ============================================================ */
+:root {
+  --gj-ease: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --gj-rise: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --warm-brown: #8b7355;
+  --vermilion-soft: rgba(196, 58, 49, 0.12);
+  --jade-soft: rgba(91, 140, 90, 0.16);
+  --gold-soft: rgba(184, 134, 11, 0.18);
+  --shadow-1: 0 2px 8px rgba(44, 24, 16, 0.08);
+  --shadow-2: 0 8px 24px rgba(44, 24, 16, 0.12);
+  --shadow-3: 0 16px 40px rgba(44, 24, 16, 0.16);
+}
+
+/* 玻璃拟态宣纸卡片：模拟纸张叠放的物理层次 */
+.gj-card {
+  background: rgba(253, 250, 243, 0.92);
+  border: 1px solid rgba(44, 24, 16, 0.08);
+  border-radius: 12px;
+  box-shadow: var(--shadow-1);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: transform 0.3s var(--gj-ease), box-shadow 0.3s var(--gj-ease),
+    border-color 0.3s var(--gj-ease);
+}
+.gj-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-3);
+  border-color: var(--vermilion);
+}
+/* 深色场景下的玻璃卡片 */
+.gj-card-dark {
+  background: rgba(253, 250, 243, 0.92);
+  border: 1px solid rgba(232, 213, 184, 0.5);
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+  transition: transform 0.3s var(--gj-ease), box-shadow 0.3s var(--gj-ease),
+    border-color 0.3s var(--gj-ease);
+}
+.gj-card-dark:hover {
+  transform: translateY(-4px);
+  border-color: var(--vermilion);
+  box-shadow: 0 14px 36px rgba(196, 58, 49, 0.25);
+}
+
+/* 云纹边框：内细线 + 外层柔光 */
+.gj-cloud-border {
+  position: relative;
+  border: 1px solid rgba(44, 24, 16, 0.1);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.gj-cloud-border::after {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border: 1px solid rgba(184, 134, 11, 0.18);
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+/* 水墨晕染纹理背景（浅色） */
+.gj-ink-bg {
+  background:
+    radial-gradient(circle at 18% 22%, rgba(44, 24, 16, 0.05), transparent 42%),
+    radial-gradient(circle at 82% 28%, rgba(91, 140, 90, 0.06), transparent 46%),
+    linear-gradient(180deg, #fdfaf3 0%, #f7efe0 55%, #fdfaf3 100%);
+}
+/* 引擎页深墨背景 + 极淡云纹暗纹 */
+.gj-engine-bg {
+  position: relative;
+  background:
+    radial-gradient(circle at 28% 8%, rgba(196, 58, 49, 0.07), transparent 38%),
+    radial-gradient(circle at 78% 70%, rgba(91, 140, 90, 0.06), transparent 45%),
+    linear-gradient(160deg, #2c1810 0%, #3a2418 55%, #241208 100%);
+  color: #f3e9d8;
+  min-height: 100vh;
+}
+.gj-engine-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.06;
+  background-image:
+    repeating-linear-gradient(60deg, rgba(255, 255, 255, 0.5) 0 1px, transparent 1px 26px),
+    repeating-linear-gradient(-60deg, rgba(255, 255, 255, 0.5) 0 1px, transparent 1px 26px);
+}
+/* 教师备课暖宣纸 + 竹帘纹理 */
+.gj-studio-bg {
+  background:
+    repeating-linear-gradient(90deg, rgba(139, 115, 85, 0.05) 0 2px, transparent 2px 22px),
+    radial-gradient(circle at 80% 10%, rgba(184, 134, 11, 0.06), transparent 40%),
+    linear-gradient(180deg, #f5e6d3 0%, #efe0c8 100%);
+}
+
+/* 状态点：朱红=处理中 / 青绿=已完成 / 金色=高优先级 */
+.gj-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.gj-dot-vermilion { background: var(--vermilion); box-shadow: 0 0 0 3px var(--vermilion-soft); }
+.gj-dot-jade { background: var(--jade); box-shadow: 0 0 0 3px var(--jade-soft); }
+.gj-dot-gold { background: var(--gold); box-shadow: 0 0 0 3px var(--gold-soft); }
+
+/* 水墨长卷进度：从右向左铺展 */
+.gj-scroll-progress {
+  position: relative;
+  height: 8px;
+  border-radius: 6px;
+  background: rgba(44, 24, 16, 0.1);
+  overflow: hidden;
+}
+.gj-scroll-progress > i {
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  display: block;
+  background: linear-gradient(90deg, rgba(91, 140, 90, 0.5), var(--jade));
+  border-radius: 6px;
+  transition: width 0.4s var(--gj-ease);
+}
+
+/* 印章盖下动画（成功反馈） */
+@keyframes gj-stamp {
+  0% { transform: rotate(-5deg) scale(2.6); opacity: 0; }
+  55% { transform: rotate(-5deg) scale(0.9); opacity: 1; }
+  100% { transform: rotate(-5deg) scale(1); opacity: 1; }
+}
+.gj-stamp { animation: gj-stamp 0.4s var(--gj-ease) both; }
+
+/* 水墨晕染加载 */
+@keyframes gj-inkwash {
+  0% { transform: scale(0.2) translateY(0); opacity: 0; filter: blur(6px); }
+  55% { opacity: 0.85; }
+  100% { transform: scale(1.5); opacity: 0; filter: blur(0); }
+}
+.gj-loader {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+}
+.gj-loader > span {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #6b4a2f, var(--ink-black));
+  animation: gj-inkwash 1.1s var(--gj-ease) infinite;
+}
+.gj-loader > span:nth-child(2) { animation-delay: 0.18s; }
+.gj-loader > span:nth-child(3) { animation-delay: 0.36s; }
+
+/* 笺纸错误提示（从右侧滑入） */
+@keyframes gj-note-in {
+  from { transform: translateX(48px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.gj-note {
+  background: #f5e6d3;
+  border: 1px solid var(--vermilion);
+  border-left: 3px solid var(--vermilion);
+  border-radius: 8px;
+  box-shadow: var(--shadow-2);
+  animation: gj-note-in 0.35s var(--gj-ease) both;
+}
+
+/* 朱红竖线导航激活（古书批注） */
+.gj-sider-menu .ant-menu-item-selected {
+  background: var(--vermilion-soft) !important;
+  border-left: 3px solid var(--vermilion) !important;
+  color: var(--vermilion) !important;
+}
+.gj-sider-menu .ant-menu-item::after { display: none !important; }
+
+/* 淡墨山水空状态 */
+.gj-empty { text-align: center; padding: 48px 24px; color: var(--ink-gray); }
+.gj-empty .gj-empty-art {
+  width: 160px; height: 96px; margin: 0 auto 14px;
+  opacity: 0.5;
+}
+
+/* 通用上浮微交互 */
+.gj-lift { transition: transform 0.3s var(--gj-ease), box-shadow 0.3s var(--gj-ease); }
+.gj-lift:hover { transform: translateY(-4px); box-shadow: var(--shadow-3); }
+
+/* 区块小标题（朱红竖线 + 毛笔感） */
+.gj-section-title {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 18px; font-weight: 700; color: var(--ink-black);
+}
+.gj-section-title::before {
+  content: ''; width: 4px; height: 18px; border-radius: 2px;
+  background: var(--vermilion);
+}
+
+/* 区块淡入 */
+@keyframes gj-fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.gj-fade-up { animation: gj-fade-up 0.5s var(--gj-ease) both; }
+
+/* 探宝地图当前节点脉动呼吸光晕 */
+@keyframes gj-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(196, 58, 49, 0.5); }
+  70% { box-shadow: 0 0 0 12px rgba(196, 58, 49, 0); }
+}
+.gj-pulse { animation: gj-pulse 2s var(--gj-ease) infinite; }
+
+/* 水墨晕染过滤（状态切换过渡） */
+.gj-ink-filter { transition: filter 0.4s var(--gj-ease), opacity 0.4s var(--gj-ease); }
+.gj-ink-filter.is-loading { filter: blur(6px); opacity: 0.4; }

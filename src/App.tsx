@@ -60,9 +60,9 @@ function App() {
   }, [setUser]);
 
   return (
-    <ConfigProvider theme={gujiTheme} locale={zhCN}>
-      <BrowserRouter>
-        <Routes>
+      <ConfigProvider theme={gujiTheme} locale={zhCN}>
+        <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+          <Routes>
           {/* Landing Page - 独立页面 */}
           <Route path="/landing" element={<LandingPage />} />
 
