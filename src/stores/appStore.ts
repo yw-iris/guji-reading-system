@@ -75,6 +75,11 @@ interface AppState {
   setStudyTasks: (tasks: StudyTask[]) => void;
   addStudyTask: (task: StudyTask) => void;
 
+  // 今日学习计划（学生端拖拽制定）
+  todayPlan: string[];
+  addTodayPlan: (id: string) => void;
+  removeTodayPlan: (id: string) => void;
+
   // 学情数据
   learningStats: LearningStats | null;
   setLearningStats: (stats: LearningStats) => void;
@@ -110,11 +115,6 @@ interface AppState {
   // 积分系统
   points: number;
   addPoints: (n: number) => void;
-
-  // 隧道转场（跨页面）
-  warp: { name: string; color: string } | null;
-  startWarp: (w: { name: string; color: string }) => void;
-  endWarp: () => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -139,6 +139,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   setStudyTasks: (tasks) => set({ studyTasks: tasks }),
   addStudyTask: (task) =>
     set((state) => ({ studyTasks: [...state.studyTasks, task] })),
+
+  todayPlan: [],
+  addTodayPlan: (id) =>
+    set((state) => (state.todayPlan.includes(id) ? {} : { todayPlan: [...state.todayPlan, id] })),
+  removeTodayPlan: (id) =>
+    set((state) => ({ todayPlan: state.todayPlan.filter((x) => x !== id) })),
 
   learningStats: null,
   setLearningStats: (stats) => set({ learningStats: stats }),
@@ -167,10 +173,6 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   points: 0,
   addPoints: (n) => set((state) => ({ points: state.points + n })),
-
-  warp: null,
-  startWarp: (w) => set({ warp: w }),
-  endWarp: () => set({ warp: null }),
 }));
 
 // 将 getFilteredTextsFromCache 也导出供外部使用

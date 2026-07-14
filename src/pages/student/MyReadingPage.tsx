@@ -13,6 +13,8 @@ import {
   HeartOutlined,
   TrophyOutlined,
   PictureOutlined,
+  CalendarOutlined,
+  DeleteOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useState, useMemo } from 'react';
@@ -95,7 +97,7 @@ export default function MyReadingPage() {
   const [exportingId, setExportingId] = useState<string | null>(null);
   const [redeemModalVisible, setRedeemModalVisible] = useState(false);
   const [workCards, setWorkCards] = useState<WorkCard[]>([]);
-  const { points, addPoints, currentUser } = useAppStore();
+  const { points, addPoints, currentUser, todayPlan, removeTodayPlan } = useAppStore();
 
   // 合并阅读记录与古籍信息
   const enrichedRecords = mockReadingRecords.map((rec) => {
@@ -108,6 +110,11 @@ export default function MyReadingPage() {
     () => getRecommendations(mockReadingRecords, mockTexts, 4),
     []
   );
+
+  // 今日学习计划（与「找古诗」拖拽制定联动）
+  const plannedTexts = todayPlan
+    .map((id) => mockTexts.find((t) => t.id === id))
+    .filter((t): t is AncientText => Boolean(t));
 
   const handleExport = (rec: (typeof enrichedRecords)[number]) => {
     if (!rec.text) return;
@@ -168,6 +175,48 @@ export default function MyReadingPage() {
         </Title>
         <Text type="secondary">查看阅读记录和完成情况</Text>
       </div>
+
+      {/* 今日学习计划（与「找古诗」拖拽制定联动） */}
+      <Card
+        className="parchment-card"
+        style={{ marginBottom: 24, borderColor: 'rgba(196,58,49,0.25)', background: 'linear-gradient(135deg, #fff7ee 0%, #fffef9 100%)' }}
+      >
+        <div className="gj-section-title" style={{ marginBottom: 12 }}>
+          <CalendarOutlined style={{ color: 'var(--vermilion)' }} /> 今日学习计划
+          {plannedTexts.length > 0 && (
+            <Tag color="red" style={{ marginLeft: 8 }}>{plannedTexts.length} 篇</Tag>
+          )}
+        </div>
+        {plannedTexts.length === 0 ? (
+          <Text type="secondary" style={{ fontSize: 13 }}>
+            还没有安排今日任务，去「找古诗」把想学的古文拖进「今日学习栏目」吧～
+          </Text>
+        ) : (
+          <List
+            dataSource={plannedTexts}
+            renderItem={(t) => (
+              <List.Item
+                key={t.id}
+                actions={[
+                  <Button type="link" size="small" key="study" onClick={() => navigate(`/student/reading/${t.id}`)}>
+                    继续学习
+                  </Button>,
+                  <Button
+                    type="text"
+                    danger
+                    size="small"
+                    icon={<DeleteOutlined />}
+                    key="del"
+                    onClick={() => removeTodayPlan(t.id)}
+                  />,
+                ]}
+              >
+                <List.Item.Meta title={t.title} description={`${t.dynasty} · ${t.author}`} />
+              </List.Item>
+            )}
+          />
+        )}
+      </Card>
 
       {/* 积分展示 */}
       <Card

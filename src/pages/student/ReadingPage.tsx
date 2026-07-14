@@ -157,7 +157,7 @@ function StudyPointPanel({ textId }: { textId: string | undefined }) {
 export default function ReadingPage() {
   const { textId } = useParams<{ textId: string }>();
   const navigate = useNavigate();
-  const { currentTier, setCurrentTier, addReadingRecord, addPoints, currentUser, startWarp } = useAppStore();
+  const { currentTier, setCurrentTier, addReadingRecord, addPoints, currentUser } = useAppStore();
 
   const textFromMock = mockTexts.find((t) => t.id === textId);
   const rawContent = textId
@@ -368,7 +368,7 @@ export default function ReadingPage() {
     return (
       <div style={{ padding: 48, textAlign: 'center' }}>
         <Title level={3}>未找到该古籍</Title>
-        <Button onClick={() => { startWarp({ name: '探索页', color: '#9ec5f0' }); setTimeout(() => navigate('/student/explore'), 1150); }}>返回探索</Button>
+        <Button onClick={() => navigate('/student/explore')}>返回探索</Button>
       </div>
     );
   }
@@ -396,7 +396,7 @@ export default function ReadingPage() {
         position: 'sticky', top: 0, zIndex: 100,
       }}>
         <Space className="reading-navbar-title">
-          <Button icon={<ArrowLeftOutlined />} type="text" onClick={() => { startWarp({ name: '探索页', color: '#9ec5f0' }); setTimeout(() => navigate('/student/explore'), 1150); }}>
+          <Button icon={<ArrowLeftOutlined />} type="text" onClick={() => navigate('/student/explore')}>
             返回
           </Button>
           <Divider type="vertical" />

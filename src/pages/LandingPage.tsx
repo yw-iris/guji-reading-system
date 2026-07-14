@@ -4,7 +4,7 @@ import {
   ThunderboltOutlined, ReadOutlined, BulbOutlined,
   UserOutlined, RobotOutlined, BarChartOutlined, DatabaseOutlined,
   ArrowRightOutlined, ScanOutlined, AimOutlined, ExperimentOutlined,
-  FileTextOutlined, GlobalOutlined, ArrowDownOutlined,
+  FileTextOutlined, ArrowDownOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../stores/appStore';
@@ -178,25 +178,6 @@ export default function LandingPage() {
               }}
             >
               🎒 我是小学生，开始读古诗！
-            </Button>
-            <Button
-              className="lp-cta"
-              size="large"
-              icon={<GlobalOutlined />}
-              onClick={() => { switchRole('student'); navigate('/student/galaxy'); }}
-              style={{
-                background: 'linear-gradient(135deg, #2e5984, #3a6ea5)',
-                border: 'none',
-                height: 58,
-                padding: '0 34px',
-                fontSize: 16,
-                borderRadius: 14,
-                fontWeight: 700,
-                color: '#fff',
-                boxShadow: '0 8px 28px rgba(46,89,132,0.45)',
-              }}
-            >
-              🌌 文化星图探索
             </Button>
           </Space>
           <div style={{ marginTop: 22 }}>

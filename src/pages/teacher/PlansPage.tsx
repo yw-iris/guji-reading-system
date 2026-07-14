@@ -192,13 +192,10 @@ export default function TeacherPlansPage() {
 
                   <div className="gj-plan-steps">
                     {plan.teachingProcess.map((step) => (
-                      <Badge
-                        key={step.order}
-                        count={step.order}
-                        style={{ backgroundColor: 'var(--jade)', marginRight: 8, marginBottom: 4 }}
-                      >
+                      <Space key={step.order} size={4} style={{ marginRight: 8, marginBottom: 4 }}>
+                        <span className="gj-step-no" style={{ background: 'var(--jade)' }}>{step.order}</span>
                         <Text style={{ fontSize: 11 }}>{step.title}</Text>
-                      </Badge>
+                      </Space>
                     ))}
                   </div>
 

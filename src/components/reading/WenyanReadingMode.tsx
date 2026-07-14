@@ -103,7 +103,7 @@ export default function WenyanReadingMode({
   void content; // 文言文主数据来自 wenyanGrammar 模块，content 作为接口预留
   const navigate = useNavigate();
   const {
-    currentTier, setCurrentTier, currentUser, addReadingRecord, addPoints, startWarp,
+    currentTier, setCurrentTier, currentUser, addReadingRecord, addPoints,
   } = useAppStore();
   const [fontSize, setFontSize] = useState(20);
   const [showOriginal, setShowOriginal] = useState(false);
@@ -269,7 +269,7 @@ export default function WenyanReadingMode({
         position: 'sticky', top: 0, zIndex: 100,
       }}>
         <Space>
-          <Button icon={<ArrowLeftOutlined />} type="text" onClick={() => { startWarp({ name: '探索页', color: '#9ec5f0' }); setTimeout(() => navigate('/student/explore'), 1150); }}>返回</Button>
+          <Button icon={<ArrowLeftOutlined />} type="text" onClick={() => navigate('/student/explore')}>返回</Button>
           <Divider type="vertical" />
           <Text strong style={{ fontSize: 16 }}>{text.title}</Text>
           <Tag color="#c43a31">{text.dynasty}</Tag>

@@ -24,6 +24,7 @@ import { useAppStore, getFilteredTextsFromCache } from '../../stores/appStore';
 import { mockTexts, mockReadingRecords } from '../../utils/mockData';
 import type { AncientText, GradeLevel } from '../../types';
 import { EmptyState, InkLoader, SealMark } from '../../components/common';
+import TodayStudyPlan from '../../components/student/TodayStudyPlan';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -122,7 +123,6 @@ export default function ExplorePage() {
     setTexts,
     readingRecords,
     addReadingRecord,
-    startWarp,
     currentUser,
     currentText,
   } = useAppStore();
@@ -350,8 +350,7 @@ export default function ExplorePage() {
 
   const handleStartReading = (text: AncientText) => {
     setCurrentText(text);
-    startWarp({ name: text.title, color: '#9ec5f0' });
-    setTimeout(() => navigate(`/student/reading/${text.id}`), 1150);
+    navigate(`/student/reading/${text.id}`);
   };
 
   // 古籍书册封面卡片
@@ -711,44 +710,8 @@ export default function ExplorePage() {
         </div>
       </div>
 
-      {/* 星图来源提示 */}
-      {(queryDynasty || queryStage || queryGenre) && (
-        <div
-          className="gj-lift"
-          style={{
-            marginBottom: 16,
-            padding: '10px 16px',
-            background: 'linear-gradient(135deg, rgba(46,89,132,0.1), rgba(184,134,11,0.1))',
-            border: '1px solid rgba(232,213,184,0.9)',
-            borderRadius: 10,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
-          }}
-        >
-          <Text style={{ color: 'var(--ink-black)', fontSize: 14 }}>
-            🌌 来自文化星图：
-            <Text strong style={{ color: 'var(--gold)' }}>
-              {queryDynasty
-                ? `${queryDynasty}代`
-                : queryStage === 'primary'
-                ? '小学古诗词'
-                : queryStage === 'junior'
-                ? '初中文言文'
-                : queryStage === 'senior'
-                ? '高中文言文'
-                : queryGenre === 'wenyan'
-                ? '文言文'
-                : '古诗词'}
-            </Text>
-            ，共 {filteredTexts.length} 篇
-          </Text>
-          <Button type="link" size="small" onClick={() => navigate('/student/galaxy')}>
-            返回星图
-          </Button>
-        </div>
-      )}
+      {/* 今日学习计划（进入学生端的提醒 + 拖拽制定） */}
+      <TodayStudyPlan />
 
       {/* 古籍书册列表 */}
       {filteredTexts.length === 0 && recommendedTexts.length === 0 ? (
