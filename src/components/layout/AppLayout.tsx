@@ -15,6 +15,7 @@ import {
   ShareAltOutlined,
   ThunderboltOutlined,
   HomeOutlined,
+  GlobalOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAppStore } from '../../stores/appStore';
@@ -26,6 +27,7 @@ const { Text } = Typography;
 
 const studentMenus: MenuProps['items'] = [
   { key: '/student/explore', icon: <ReadOutlined />, label: '🔍 找古诗' },
+  { key: '/student/galaxy', icon: <GlobalOutlined />, label: '🌌 文化星图' },
   { key: '/student/reading', icon: <BookOutlined />, label: '📖 我读过的' },
   { key: '/student/tasks', icon: <FileTextOutlined />, label: '✏️ 我的作业' },
 ];

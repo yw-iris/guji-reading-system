@@ -124,6 +124,134 @@ body {
   animation: fadeIn 0.5s ease forwards;
 }
 
+/* ===== 首页 LandingPage 专属样式 ===== */
+@keyframes lp-twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+@keyframes lp-drift {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(0, -18px, 0) scale(1.08); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes lp-rise {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.lp-rise {
+  animation: lp-rise 0.8s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* 星点 */
+.lp-star {
+  position: absolute;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.85);
+  animation: lp-twinkle var(--dur, 3s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+  pointer-events: none;
+}
+/* 星云 */
+.lp-nebula {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(46px);
+  opacity: 0.55;
+  animation: lp-drift 16s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* 玻璃拟态统计卡 */
+.lp-glass {
+  background: rgba(255, 254, 249, 0.72) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(232, 213, 184, 0.9) !important;
+}
+
+/* 主按钮辉光悬停 */
+.lp-cta {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+}
+.lp-cta:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.07);
+}
+
+/* 卡片通用悬停微交互 */
+.lp-card {
+  transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1), box-shadow 0.3s, border-color 0.3s;
+}
+.lp-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px rgba(44, 24, 16, 0.16) !important;
+}
+.lp-feature {
+  transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+}
+.lp-feature:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 24px 48px rgba(196, 58, 49, 0.18) !important;
+  border-color: var(--vermilion) !important;
+}
+.lp-step {
+  transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+}
+.lp-step:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 36px rgba(46, 89, 132, 0.14) !important;
+  border-color: #9ec5f0 !important;
+}
+.lp-role {
+  transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+}
+.lp-role:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 24px 48px rgba(44, 24, 16, 0.16) !important;
+}
+
+/* 区块小标题装饰线 */
+.lp-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.lp-eyebrow::before,
+.lp-eyebrow::after {
+  content: '';
+  width: 28px;
+  height: 1px;
+  background: var(--gold);
+  opacity: 0.6;
+}
+
+/* 向下滚动提示 */
+@keyframes lp-bounce {
+  0%, 100% { transform: translateY(0); opacity: 0.5; }
+  50% { transform: translateY(8px); opacity: 1; }
+}
+.lp-scroll-hint {
+  animation: lp-bounce 1.8s ease-in-out infinite;
+}
+
+/* 读完奖励星星脉冲 */
+@keyframes lp-reward {
+  0%, 100% { transform: scale(1) rotate(-4deg); text-shadow: 0 0 0 rgba(196,58,49,0); }
+  50% { transform: scale(1.18) rotate(4deg); text-shadow: 0 0 18px rgba(245,207,107,0.8); }
+}
+.lp-reward {
+  animation: lp-reward 1.4s ease-in-out infinite;
+  display: inline-block;
+}
+
+@media (max-width: 768px) {
+  .lp-hero-title { font-size: 32px !important; line-height: 1.25 !important; }
+  .lp-hero-subtitle { font-size: 21px !important; }
+  .lp-hero-seal { width: 56px !important; height: 56px !important; font-size: 15px !important; }
+  .poem-line-art { width: 132px !important; height: 99px !important; align-self: center !important; margin-bottom: 4px !important; }
+}
+
 /* ===== 移动端全局响应式样式 ===== */
 @media (max-width: 768px) {
   /* 触摸友好的按钮尺寸：最小 44px */

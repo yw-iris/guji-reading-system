@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Typography, Button, Space, Segmented, Card, Tag, Divider,
@@ -9,14 +9,18 @@ import {
   CheckCircleOutlined, StarOutlined, QuestionCircleOutlined,
   ReloadOutlined,
   StepForwardOutlined, PauseCircleOutlined, CaretRightOutlined,
-  FilePdfOutlined,
+  FilePdfOutlined, ArrowRightOutlined, EyeOutlined, EyeInvisibleOutlined,
+  SoundOutlined,
 } from '@ant-design/icons';
 import { useAppStore } from '../../stores/appStore';
 import { mockTexts, mockTieredContent, mockStudyPoints } from '../../utils/mockData';
 import { prebuiltDemos, prebuiltDemoToAncientText } from '../../data/prebuiltDemos';
+import { poemLineNotes } from '../../data/poemLineNotes';
+import { poemLineArt } from '../../data/poemLineArt';
 import { exportToPDF } from '../../utils/pdfExport';
 import { AncientImage } from '../../components/reading/AncientImage';
 import WenyanReadingMode from '../../components/reading/WenyanReadingMode';
+import { useSpeech } from '../../hooks/useSpeech';
 import type { TextTier, SchoolStage, TieredContent } from '../../types';
 
 const { Title, Text, Paragraph } = Typography;
@@ -153,7 +157,7 @@ function StudyPointPanel({ textId }: { textId: string | undefined }) {
 export default function ReadingPage() {
   const { textId } = useParams<{ textId: string }>();
   const navigate = useNavigate();
-  const { currentTier, setCurrentTier, addReadingRecord, addPoints, currentUser } = useAppStore();
+  const { currentTier, setCurrentTier, addReadingRecord, addPoints, currentUser, startWarp } = useAppStore();
 
   const textFromMock = mockTexts.find((t) => t.id === textId);
   const rawContent = textId
@@ -189,15 +193,77 @@ export default function ReadingPage() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [isExporting, setIsExporting] = useState(false);
+  // 诗词逐句：右侧对照（翻译/解释）默认折叠，需主动展开
+  const [expandedPairs, setExpandedPairs] = useState<Record<number, boolean>>({});
+  const sentenceRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const togglePair = useCallback((i: number) => setExpandedPairs((p) => ({ ...p, [i]: !p[i] })), []);
+
+  // 语音朗读（浏览器原生 TTS，中文跟读）
+  const speech = useSpeech();
+  const [isReading, setIsReading] = useState(false);
+  const readingRef = useRef(false);
+
+  // 卸载时停止朗读，避免离开页面后仍在后台发声
+  useEffect(() => () => { readingRef.current = false; }, []);
+  // 阅读完成后自动停止朗读
+  useEffect(() => {
+    if (isCompleted && readingRef.current) {
+      speech.stop();
+      readingRef.current = false;
+      setIsReading(false);
+    }
+  }, [isCompleted, speech]);
+
+  // 自动播放与朗读全文互斥：开启其一会停掉另一个
+  const toggleAutoPlay = useCallback(() => {
+    if (readingRef.current) { speech.stop(); readingRef.current = false; setIsReading(false); }
+    setIsAutoPlay((p) => !p);
+  }, [speech]);
+
 
   const sentences = useMemo(() => {
     if (!content) return [];
     return splitIntoSentences(content[currentTier]);
   }, [content, currentTier]);
 
+  // 对照版本：与当前版本相对的另一个层级（原句在左，对照在右）
+  const contrastTier: TextTier = currentTier === 'original' ? 'adapted' : 'original';
+  const contrastSentences = useMemo(() => {
+    if (!content) return [];
+    return splitIntoSentences(content[contrastTier] || content[currentTier]);
+  }, [content, contrastTier, currentTier]);
+
   const totalSentences = sentences.length;
   const totalPages = Math.ceil(totalSentences / PAGE_SIZE);
   const shouldPaginate = totalSentences > MAX_SENTENCES_WITHOUT_PAGINATION;
+
+  // 朗读全文：从当前句开始，逐句朗读并自动推进，读完最后一句自动停止
+  const startReadingAll = useCallback(() => {
+    if (!speech.supported) return;
+    if (readingRef.current) {
+      speech.stop();
+      readingRef.current = false;
+      setIsReading(false);
+      return;
+    }
+    readingRef.current = true;
+    setIsReading(true);
+    if (isAutoPlay) setIsAutoPlay(false);
+    const readFrom = (i: number) => {
+      if (i >= totalSentences) { readingRef.current = false; setIsReading(false); return; }
+      setCurrentSentenceIndex(i);
+      setRevealedSentences((prev) => (prev.includes(i) ? prev : [...prev, i]));
+      speech.say(`s-${i}`, sentences[i], {
+        onEnd: () => {
+          if (!readingRef.current) return;
+          if (i + 1 < totalSentences) readFrom(i + 1);
+          else { readingRef.current = false; setIsReading(false); }
+        },
+      });
+    };
+    readFrom(currentSentenceIndex);
+  }, [speech, isAutoPlay, currentSentenceIndex, totalSentences, sentences]);
+
 
   // 当前页的句子全局索引范围
   const pageStartIndex = currentPage * PAGE_SIZE;
@@ -219,7 +285,16 @@ export default function ReadingPage() {
     setRevealedSentences([0]);
     setIsCompleted(false);
     setCurrentPage(0);
+    setExpandedPairs({});
   }, [currentTier]);
+
+  // 当前句变化时，平滑滚动到视口中央（逐句展开时页面向上推进）
+  useEffect(() => {
+    const el = sentenceRefs.current[currentSentenceIndex];
+    if (el && !isCompleted) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [currentSentenceIndex, currentPage, isCompleted]);
 
   useEffect(() => {
     if (!isAutoPlay || isCompleted) return;
@@ -289,7 +364,7 @@ export default function ReadingPage() {
     return (
       <div style={{ padding: 48, textAlign: 'center' }}>
         <Title level={3}>未找到该古籍</Title>
-        <Button onClick={() => navigate('/student/explore')}>返回探索</Button>
+        <Button onClick={() => { startWarp({ name: '探索页', color: '#9ec5f0' }); setTimeout(() => navigate('/student/explore'), 1150); }}>返回探索</Button>
       </div>
     );
   }
@@ -317,7 +392,7 @@ export default function ReadingPage() {
         position: 'sticky', top: 0, zIndex: 100,
       }}>
         <Space className="reading-navbar-title">
-          <Button icon={<ArrowLeftOutlined />} type="text" onClick={() => navigate('/student/explore')}>
+          <Button icon={<ArrowLeftOutlined />} type="text" onClick={() => { startWarp({ name: '探索页', color: '#9ec5f0' }); setTimeout(() => navigate('/student/explore'), 1150); }}>
             返回
           </Button>
           <Divider type="vertical" />
@@ -371,99 +446,30 @@ export default function ReadingPage() {
             </div>
           </div>
 
-          {/* ===== 醒目的版本切换卡片 ===== */}
-          <div style={{
-            display: 'flex', gap: 12, marginBottom: 24,
-            flexWrap: 'wrap',
-          }}>
+          {/* 版本切换：原版（繁体）/ 简体原版 两个小按钮 */}
+          <div style={{ display: 'flex', gap: 10, marginBottom: 24, alignItems: 'center', flexWrap: 'wrap' }}>
+            <Text type="secondary" style={{ fontSize: 13 }}>文字版本：</Text>
             {[
-              {
-                tier: 'vernacular' as TextTier,
-                icon: '⭐',
-                label: '简单版',
-                desc: '大白话，一看就懂',
-                color: '#2e5984',
-                bg: '#e8f0f8',
-                border: '#b8d4e8',
-                activeBg: '#2e5984',
-              },
-              {
-                tier: 'adapted' as TextTier,
-                icon: '⭐⭐',
-                label: '适中版',
-                desc: '保留原文，加注释',
-                color: '#3c6e47',
-                bg: '#e8f2e8',
-                border: '#b8d8b8',
-                activeBg: '#3c6e47',
-              },
-              {
-                tier: 'original' as TextTier,
-                icon: '⭐⭐⭐',
-                label: '挑战版',
-                desc: '古籍原文，挑战自己',
-                color: '#8b6914',
-                bg: '#f8f0e0',
-                border: '#d8c8a8',
-                activeBg: '#8b6914',
-              },
+              { tier: 'adapted' as TextTier, label: '简体原版', desc: '简体' },
+              { tier: 'original' as TextTier, label: '繁体原版', desc: '繁体' },
             ].map((opt) => {
-              const isActive = currentTier === opt.tier;
+              const active = currentTier === opt.tier;
               return (
-                <div
+                <Button
                   key={opt.tier}
+                  size="middle"
+                  type={active ? 'primary' : 'default'}
                   onClick={() => setCurrentTier(opt.tier)}
                   style={{
-                    flex: '1 1 140px',
-                    minWidth: 130,
-                    padding: '16px 14px',
-                    borderRadius: 14,
-                    cursor: 'pointer',
-                    textAlign: 'center',
-                    transition: 'all 0.25s ease',
-                    background: isActive ? opt.activeBg : opt.bg,
-                    border: `2px solid ${isActive ? opt.color : opt.border}`,
-                    boxShadow: isActive
-                      ? `0 4px 20px ${opt.color}33`
-                      : '0 1px 4px rgba(0,0,0,0.04)',
-                    transform: isActive ? 'translateY(-2px)' : 'none',
+                    borderRadius: 20, padding: '0 18px', height: 36, fontWeight: active ? 600 : 500,
+                    border: active ? 'none' : '1px solid #d4c5b2',
+                    background: active ? '#2c1810' : '#fffef9',
+                    color: active ? '#f5e6d3' : '#5c4a3a',
                   }}
                 >
-                  <div style={{
-                    fontSize: isActive ? 22 : 18,
-                    marginBottom: 4,
-                    transition: 'font-size 0.25s',
-                  }}>
-                    {opt.icon}
-                  </div>
-                  <div style={{
-                    fontWeight: isActive ? 700 : 500,
-                    fontSize: 15,
-                    color: isActive ? '#fff' : opt.color,
-                    marginBottom: 2,
-                  }}>
-                    {opt.label}
-                  </div>
-                  <div style={{
-                    fontSize: 11,
-                    color: isActive ? 'rgba(255,255,255,0.8)' : '#999',
-                  }}>
-                    {opt.desc}
-                  </div>
-                  {isActive && (
-                    <div style={{
-                      marginTop: 6,
-                      fontSize: 11,
-                      color: 'rgba(255,255,255,0.9)',
-                      background: 'rgba(255,255,255,0.15)',
-                      borderRadius: 10,
-                      padding: '2px 10px',
-                      display: 'inline-block',
-                    }}>
-                      ✓ 当前阅读版本
-                    </div>
-                  )}
-                </div>
+                  {opt.label}
+                  {active && <span style={{ marginLeft: 6, fontSize: 11 }}>✓</span>}
+                </Button>
               );
             })}
           </div>
@@ -504,40 +510,100 @@ export default function ReadingPage() {
             </div>
           </div>
 
-          {/* ===== 逐句阅读主区域 ===== */}
+          {/* ===== 逐句阅读主区域（左原句 / 右对照，箭头指向） ===== */}
           <div onClick={handleCardClick} style={{ cursor: isCompleted ? 'default' : 'pointer' }}>
-            {pageRevealedSentences.map((idx) => (
-              <div
-                key={idx}
-                className="fade-in reading-sentence"
-                style={{
-                  fontSize,
-                  lineHeight: 2.2,
-                  letterSpacing: '0.04em',
-                  color: '#2c1810',
-                  padding: '16px 20px',
-                  marginBottom: 8,
-                  background: idx === currentSentenceIndex ? '#fffef9' : '#fdfaf3',
-                  borderRadius: 12,
-                  border: idx === currentSentenceIndex
-                    ? `1px solid ${currentLabel.color}33`
-                    : '1px solid transparent',
-                  fontFamily: currentTier === 'original'
-                    ? '"Noto Serif SC", "STSong", "SimSun", serif'
-                    : '"Noto Serif SC", "KaiTi", serif',
-                  transition: 'all 0.3s ease',
-                  position: 'relative',
-                }}
-              >
-                {sentences[idx]}
-                {idx === currentSentenceIndex && !isCompleted && (
-                  <span style={{
-                    position: 'absolute', left: -3, top: 16, bottom: 16,
-                    width: 3, background: currentLabel.color, borderRadius: 2,
+            {pageRevealedSentences.map((idx) => {
+              const noteOpen = expandedPairs[idx];
+              const isCurrent = idx === currentSentenceIndex && !isCompleted;
+              const artRel = poemLineArt[`${text.id}-${idx}`];
+              const artUrl = artRel ? `${import.meta.env.BASE_URL}${artRel}` : null;
+              const lineNote = poemLineNotes[text.id]?.[idx];
+              const noteText = lineNote ?? (contrastSentences[idx] || sentences[idx]);
+              return (
+                <div
+                  key={idx}
+                  ref={(el) => { sentenceRefs.current[idx] = el; }}
+                  className="fade-in poem-sentence"
+                  style={{
+                    display: 'flex', gap: 14, alignItems: 'flex-start',
+                    padding: '16px 18px', marginBottom: 10, borderRadius: 12,
+                    background: isCurrent ? '#fffef9' : '#fdfaf3',
+                    border: isCurrent
+                      ? `1px solid ${currentLabel.color}55`
+                      : speech.isSpeaking(`s-${idx}`)
+                        ? '1px solid #c43a3155'
+                        : '1px solid transparent',
+                    boxShadow: speech.isSpeaking(`s-${idx}`) ? '0 0 0 3px rgba(196,58,49,0.12)' : 'none',
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  {/* 逐句国风插画 */}
+                  {artUrl && (
+                    <img
+                      src={artUrl}
+                      alt={`${sentences[idx]} 插画`}
+                      className="poem-line-art"
+                      style={{
+                        width: 84, height: 63, borderRadius: 10, flexShrink: 0, marginTop: 2,
+                        border: '1px solid #e8d5b8', objectFit: 'cover', alignSelf: 'flex-start',
+                      }}
+                    />
+                  )}
+                  {/* 左：原句（当前版本） */}
+                  <div style={{
+                    flex: '1 1 0', minWidth: 0, fontSize, lineHeight: 2.1, letterSpacing: '0.04em',
+                    color: '#2c1810',
+                    fontFamily: currentTier === 'original'
+                      ? '"Noto Serif SC", "STSong", "SimSun", serif'
+                      : '"Noto Serif SC", "KaiTi", serif',
+                  }}>
+                    {sentences[idx]}
+                  </div>
+                  <ArrowRightOutlined className="poem-arrow" style={{
+                    color: currentLabel.color, marginTop: 6, fontSize: 16, flexShrink: 0,
+                    opacity: isCurrent ? 1 : 0.4, transition: 'opacity 0.3s',
                   }} />
-                )}
-              </div>
-            ))}
+                  {/* 逐句朗读按钮 */}
+                  <Tooltip title={speech.supported ? (speech.isSpeaking(`s-${idx}`) ? '停止朗读' : '朗读这一句') : '当前浏览器不支持语音朗读'}>
+                    <Button
+                      size="small"
+                      shape="circle"
+                      type={speech.isSpeaking(`s-${idx}`) ? 'primary' : 'default'}
+                      icon={<SoundOutlined spin={speech.isSpeaking(`s-${idx}`)} />}
+                      disabled={!speech.supported}
+                      onClick={(e) => { e.stopPropagation(); if (readingRef.current) { speech.stop(); readingRef.current = false; setIsReading(false); } speech.say(`s-${idx}`, sentences[idx]); }}
+                      style={{ flexShrink: 0, marginTop: 6 }}
+                    />
+                  </Tooltip>
+                  {/* 右：白话翻译，默认折叠（点开显示） */}
+                  <div style={{ flex: '1 1 0', minWidth: 0 }}>
+                    {noteOpen ? (
+                      <div>
+                        <div style={{ fontSize: 15, lineHeight: 1.9, color: '#5c4a3a', paddingLeft: 12, borderLeft: `3px solid ${currentLabel.color}55` }}>
+                          {noteText}
+                        </div>
+                        <div style={{ marginTop: 6 }}>
+                          <Button size="small" type="link" icon={<EyeInvisibleOutlined />}
+                            onClick={(e) => { e.stopPropagation(); togglePair(idx); }}
+                            style={{ padding: 0, height: 'auto', color: '#a08b6b' }}>收起翻译</Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap',
+                        padding: '8px 12px', borderRadius: 8, background: '#faf5eb',
+                        borderLeft: `3px dashed ${currentLabel.color}66`, color: '#a08b6b', fontSize: 13,
+                      }}>
+                        🔒 翻译藏起来啦
+                        <Button size="small" type="link" icon={<EyeOutlined />}
+                          onClick={(e) => { e.stopPropagation(); togglePair(idx); }}
+                          style={{ padding: 0, height: 'auto', color: currentLabel.color }}>显示翻译</Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {/* 分页器 */}
@@ -569,11 +635,15 @@ export default function ReadingPage() {
           {/* 完成状态 */}
           {isCompleted && (
             <div className="fade-in" style={{ textAlign: 'center', marginTop: 24 }}>
-              <CheckCircleOutlined style={{ fontSize: 48, color: '#5b8c5a' }} />
-            <Title level={4} style={{ color: '#5b8c5a', marginTop: 12 }}>
+              <div className="lp-reward" style={{ fontSize: 60, lineHeight: 1 }}>⭐</div>
+            <Title level={4} style={{ color: '#5b8c5a', marginTop: 8 }}>
               🎉 太厉害了！你读完了整篇！
             </Title>
-            <Text type="secondary">你读完了全部 {totalSentences} 句，获得了 ⭐ 10 颗星星！</Text>
+            <div style={{ marginTop: 4 }}>
+              <Text strong style={{ fontSize: 18, color: '#c43a31' }}>
+                你读完 {totalSentences} 句，收获 ⭐ × 10 颗星星！
+              </Text>
+            </div>
               <div style={{ marginTop: 16 }}>
                 <Space>
                   <Button icon={<ReloadOutlined />} onClick={handleRestart}>重新阅读</Button>
@@ -621,13 +691,25 @@ export default function ReadingPage() {
             }}>
               <Space direction="vertical" size={8}>
               <Text type="secondary" style={{ fontSize: 13 }}>
-                {isAutoPlay ? '⏱ 自动播放中（每句3秒）' : '👆 点击文字区域读下一句'}
+                {isReading ? '📢 正在朗读，跟着一起读吧！'
+                  : isAutoPlay ? '⏱ 自动播放中（每句3秒）' : '👆 点击文字区域读下一句'}
               </Text>
                 <Space>
+                  <Tooltip title={speech.supported ? '' : '当前浏览器不支持语音朗读'}>
+                    <Button
+                      size="small"
+                      icon={isReading ? <PauseCircleOutlined /> : <SoundOutlined />}
+                      onClick={(e) => { e.stopPropagation(); startReadingAll(); }}
+                      type={isReading ? 'primary' : 'default'}
+                      disabled={!speech.supported}
+                    >
+                      {isReading ? '停止朗读' : '朗读全文'}
+                    </Button>
+                  </Tooltip>
                   <Button
                     size="small"
                     icon={isAutoPlay ? <PauseCircleOutlined /> : <CaretRightOutlined />}
-                    onClick={(e) => { e.stopPropagation(); setIsAutoPlay(!isAutoPlay); }}
+                    onClick={(e) => { e.stopPropagation(); toggleAutoPlay(); }}
                     type={isAutoPlay ? 'primary' : 'default'}
                   >
                     {isAutoPlay ? '暂停' : '自动播放'}
@@ -738,6 +820,13 @@ export default function ReadingPage() {
             font-size: calc(var(--font-size, 20px) - 2px) !important;
             padding: 12px 14px !important;
             line-height: 2 !important;
+          }
+          .poem-sentence {
+            flex-direction: column !important;
+            gap: 8px !important;
+          }
+          .poem-arrow {
+            display: none !important;
           }
           .reading-actions {
             padding: 12px !important;

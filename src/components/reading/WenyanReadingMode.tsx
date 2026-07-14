@@ -1,14 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Typography, Button, Space, Segmented, Card, Tag, Divider,
   Tabs, Collapse, Tooltip, Empty, Progress,
 } from 'antd';
 import {
-  ArrowLeftOutlined, FileImageOutlined, CheckCircleOutlined,
+  ArrowLeftOutlined, ArrowRightOutlined, FileImageOutlined, CheckCircleOutlined,
   ReloadOutlined, StepForwardOutlined, PauseCircleOutlined, CaretRightOutlined,
   StarOutlined, QuestionCircleOutlined, BookOutlined, FilePdfOutlined,
-  BulbOutlined, ReadOutlined,
+  BulbOutlined, ReadOutlined, EyeOutlined, EyeInvisibleOutlined,
+  SoundOutlined,
 } from '@ant-design/icons';
 import { useAppStore } from '../../stores/appStore';
 import { wenyanGrammar } from '../../data/wenyanGrammar';
@@ -17,6 +18,7 @@ import { wenyanExercises } from '../../data/wenyanExercises';
 import type { AncientText, TieredContent, TextTier, WenyanAnnotation, WenyanToken, MindMapNode } from '../../types';
 import { exportToPDF } from '../../utils/pdfExport';
 import { AncientImage } from '../reading/AncientImage';
+import { useSpeech } from '../../hooks/useSpeech';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -101,7 +103,7 @@ export default function WenyanReadingMode({
   void content; // 文言文主数据来自 wenyanGrammar 模块，content 作为接口预留
   const navigate = useNavigate();
   const {
-    currentTier, setCurrentTier, currentUser, addReadingRecord, addPoints,
+    currentTier, setCurrentTier, currentUser, addReadingRecord, addPoints, startWarp,
   } = useAppStore();
   const [fontSize, setFontSize] = useState(20);
   const [showOriginal, setShowOriginal] = useState(false);
@@ -116,11 +118,64 @@ export default function WenyanReadingMode({
   const [revealedIdx, setRevealedIdx] = useState<number[]>([0]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [expandedNotes, setExpandedNotes] = useState<Record<number, boolean>>({});
+  // 繁体原版（纯挑战）默认隐藏译文，需主动展开；简体原版默认显示
+  const [showTranslation, setShowTranslation] = useState(currentTier !== 'original');
+
+  const sentenceRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [isCompleted, setIsCompleted] = useState(false);
   const [isAutoPlay, setIsAutoPlay] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [exerciseAnswers, setExerciseAnswers] = useState<Record<string, string>>({});
   const [showResult, setShowResult] = useState<Record<string, boolean>>({});
+
+  // 语音朗读（浏览器原生 TTS，中文跟读）
+  const speech = useSpeech();
+  const [isReading, setIsReading] = useState(false);
+  const readingRef = useRef(false);
+
+  // 卸载时停止朗读，避免离开页面后仍在后台发声
+  useEffect(() => () => { readingRef.current = false; }, []);
+  // 阅读完成后自动停止朗读
+  useEffect(() => {
+    if (isCompleted && readingRef.current) {
+      speech.stop();
+      readingRef.current = false;
+      setIsReading(false);
+    }
+  }, [isCompleted, speech]);
+
+  // 自动播放与朗读全文互斥
+  const toggleAutoPlay = useCallback(() => {
+    if (readingRef.current) { speech.stop(); readingRef.current = false; setIsReading(false); }
+    setIsAutoPlay((p) => !p);
+  }, [speech]);
+
+  // 朗读全文：从当前句开始，逐句朗读并自动推进
+  const startReadingAll = useCallback(() => {
+    if (!speech.supported) return;
+    if (readingRef.current) {
+      speech.stop();
+      readingRef.current = false;
+      setIsReading(false);
+      return;
+    }
+    readingRef.current = true;
+    setIsReading(true);
+    if (isAutoPlay) setIsAutoPlay(false);
+    const readFrom = (i: number) => {
+      if (i >= totalSentences) { readingRef.current = false; setIsReading(false); return; }
+      setCurrentIdx(i);
+      setRevealedIdx((p) => (p.includes(i) ? p : [...p, i]));
+      speech.say(`s-${i}`, sentences[i].original, {
+        onEnd: () => {
+          if (!readingRef.current) return;
+          if (i + 1 < totalSentences) readFrom(i + 1);
+          else { readingRef.current = false; setIsReading(false); }
+        },
+      });
+    };
+    readFrom(currentIdx);
+  }, [speech, isAutoPlay, currentIdx, totalSentences, sentences]);
 
   const readingProgress = totalSentences > 0
     ? Math.round((revealedIdx.length / totalSentences) * 100) : 0;
@@ -131,7 +186,16 @@ export default function WenyanReadingMode({
     setCurrentIdx(0);
     setIsCompleted(false);
     setExpandedNotes({});
+    setShowTranslation(currentTier !== 'original');
   }, [currentTier, text.id]);
+
+  // 当前句变化时，平滑滚动到视口（页面向上推进，已读句子向上累积）
+  useEffect(() => {
+    const el = sentenceRefs.current[currentIdx];
+    if (el && !isCompleted) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [currentIdx, isCompleted]);
 
   // 自动播放
   useEffect(() => {
@@ -166,8 +230,7 @@ export default function WenyanReadingMode({
   const showOriginalProminent = currentTier === 'original';
 
   const handleExportPDF = () => {
-    const tierName = currentTier === 'original' ? '挑战版（繁体原文）'
-      : currentTier === 'adapted' ? '适中版（简体原文）' : '简单版（白话串讲）';
+    const tierName = currentTier === 'original' ? '繁体原版' : '简体原版';
     const body = sentences
       .map((s) => `${s.original}\n【译】${s.translation}`)
       .join('\n\n');
@@ -206,7 +269,7 @@ export default function WenyanReadingMode({
         position: 'sticky', top: 0, zIndex: 100,
       }}>
         <Space>
-          <Button icon={<ArrowLeftOutlined />} type="text" onClick={() => navigate('/student/explore')}>返回</Button>
+          <Button icon={<ArrowLeftOutlined />} type="text" onClick={() => { startWarp({ name: '探索页', color: '#9ec5f0' }); setTimeout(() => navigate('/student/explore'), 1150); }}>返回</Button>
           <Divider type="vertical" />
           <Text strong style={{ fontSize: 16 }}>{text.title}</Text>
           <Tag color="#c43a31">{text.dynasty}</Tag>
@@ -244,28 +307,30 @@ export default function WenyanReadingMode({
           </div>
         </div>
 
-        {/* 版本切换卡片 */}
-        <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
+        {/* 版本切换：原版（简体）/ 繁体版 两个小按钮 */}
+        <div style={{ display: 'flex', gap: 10, marginBottom: 24, alignItems: 'center', flexWrap: 'wrap' }}>
+          <Text type="secondary" style={{ fontSize: 13 }}>文字版本：</Text>
           {[
-            { tier: 'vernacular' as TextTier, icon: '⭐', label: '简单版', desc: '白话串讲，一看就懂', color: '#2e5984', bg: '#e8f0f8', border: '#b8d4e8', activeBg: '#2e5984' },
-            { tier: 'adapted' as TextTier, icon: '⭐⭐', label: '适中版', desc: '简体原文+句注', color: '#3c6e47', bg: '#e8f2e8', border: '#b8d8b8', activeBg: '#3c6e47' },
-            { tier: 'original' as TextTier, icon: '⭐⭐⭐', label: '挑战版', desc: '繁体原文，挑战自己', color: '#8b6914', bg: '#f8f0e0', border: '#d8c8a8', activeBg: '#8b6914' },
+            { tier: 'adapted' as TextTier, label: '简体原版', desc: '简体' },
+            { tier: 'original' as TextTier, label: '繁体原版', desc: '繁体' },
           ].map((opt) => {
             const active = currentTier === opt.tier;
             return (
-              <div key={opt.tier} onClick={() => setCurrentTier(opt.tier)} style={{
-                flex: '1 1 140px', minWidth: 130, padding: '16px 14px', borderRadius: 14,
-                cursor: 'pointer', textAlign: 'center', transition: 'all 0.25s ease',
-                background: active ? opt.activeBg : opt.bg,
-                border: `2px solid ${active ? opt.color : opt.border}`,
-                boxShadow: active ? `0 4px 20px ${opt.color}33` : '0 1px 4px rgba(0,0,0,0.04)',
-                transform: active ? 'translateY(-2px)' : 'none',
-              }}>
-                <div style={{ fontSize: active ? 22 : 18, marginBottom: 4 }}>{opt.icon}</div>
-                <div style={{ fontWeight: active ? 700 : 500, fontSize: 15, color: active ? '#fff' : opt.color }}>{opt.label}</div>
-                <div style={{ fontSize: 11, color: active ? 'rgba(255,255,255,0.8)' : '#999' }}>{opt.desc}</div>
-                {active && <div style={{ marginTop: 6, fontSize: 11, color: 'rgba(255,255,255,0.9)', background: 'rgba(255,255,255,0.15)', borderRadius: 10, padding: '2px 10px', display: 'inline-block' }}>✓ 当前版本</div>}
-              </div>
+              <Button
+                key={opt.tier}
+                size="middle"
+                type={active ? 'primary' : 'default'}
+                onClick={() => setCurrentTier(opt.tier)}
+                style={{
+                  borderRadius: 20, padding: '0 18px', height: 36, fontWeight: active ? 600 : 500,
+                  border: active ? 'none' : `1px solid #d4c5b2`,
+                  background: active ? '#2c1810' : '#fffef9',
+                  color: active ? '#f5e6d3' : '#5c4a3a',
+                }}
+              >
+                {opt.label}
+                {active && <span style={{ marginLeft: 6, fontSize: 11 }}>✓</span>}
+              </Button>
             );
           })}
         </div>
@@ -281,7 +346,7 @@ export default function WenyanReadingMode({
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
             <Space>
               <Tag color={accent} style={{ borderRadius: 6 }}>
-                {currentTier === 'original' ? '挑战版·繁体' : currentTier === 'adapted' ? '适中版·简体' : '简单版·白话'}
+                {currentTier === 'original' ? '繁体原版' : '简体原版'}
               </Tag>
               <Text type="secondary" style={{ fontSize: 12 }}>{revealedIdx.length} / {totalSentences} 句</Text>
             </Space>
@@ -292,21 +357,34 @@ export default function WenyanReadingMode({
           </div>
         </div>
 
-        {/* 逐句对照区 */}
+        {/* 逐句对照区：左原文 / 箭头 / 右翻译+注释 */}
         <div onClick={handleCardClick} style={{ cursor: isCompleted ? 'default' : 'pointer' }}>
           {revealedIdx.map((idx) => {
             const s = sentences[idx];
             if (!s) return null;
             const noteOpen = expandedNotes[idx];
+            const isCurrent = idx === currentIdx && !isCompleted;
             return (
-              <div key={idx} className="fade-in" style={{
-                padding: '18px 20px', marginBottom: 10, borderRadius: 12,
-                background: idx === currentIdx && !isCompleted ? '#fffef9' : '#fdfaf3',
-                border: idx === currentIdx && !isCompleted ? `1px solid ${accent}33` : '1px solid transparent',
-                transition: 'all 0.3s ease',
-              }}>
-                {/* 原文 */}
+              <div
+                key={idx}
+                ref={(el) => { sentenceRefs.current[idx] = el; }}
+                className="fade-in wenyan-sentence"
+                style={{
+                  display: 'flex', gap: 14, alignItems: 'flex-start',
+                  padding: '16px 18px', marginBottom: 10, borderRadius: 12,
+                  background: isCurrent ? '#fffef9' : '#fdfaf3',
+                  border: isCurrent
+                    ? `1px solid ${accent}55`
+                    : speech.isSpeaking(`s-${idx}`)
+                      ? '1px solid #c43a3155'
+                      : '1px solid transparent',
+                  boxShadow: speech.isSpeaking(`s-${idx}`) ? '0 0 0 3px rgba(196,58,49,0.12)' : 'none',
+                  transition: 'all 0.3s ease',
+                }}
+              >
+                {/* 左：原句 */}
                 <div style={{
+                  flex: '1 1 0', minWidth: 0,
                   fontSize: showOriginalProminent ? fontSize + 4 : fontSize,
                   lineHeight: 2.1, letterSpacing: '0.04em', color: '#2c1810',
                   fontFamily: currentTier === 'original'
@@ -316,25 +394,65 @@ export default function WenyanReadingMode({
                 }}>
                   {s.original}
                 </div>
-                {/* 翻译 */}
-                {(!showOriginalProminent || noteOpen) && (
-                  <div style={{
-                    marginTop: 8, fontSize: 15, lineHeight: 1.9, color: '#5c4a3a',
-                    paddingLeft: 12, borderLeft: `3px solid ${accent}55`,
-                  }}>
-                    {s.translation}
-                  </div>
-                )}
-                {/* 字词注释 */}
-                <div style={{ marginTop: 8 }}>
+                {/* 箭头指向右 */}
+                <ArrowRightOutlined className="wenyan-arrow" style={{
+                  color: accent, marginTop: 8, fontSize: 16, flexShrink: 0,
+                  opacity: isCurrent ? 1 : 0.4, transition: 'opacity 0.3s',
+                }} />
+                {/* 逐句朗读按钮 */}
+                <Tooltip title={speech.supported ? (speech.isSpeaking(`s-${idx}`) ? '停止朗读' : '朗读这一句') : '当前浏览器不支持语音朗读'}>
                   <Button
-                    size="small" type="link" icon={<BookOutlined />}
-                    onClick={(e) => { e.stopPropagation(); toggleNote(idx); }}
-                    style={{ padding: 0, height: 'auto', color: accent }}
-                  >
-                    {noteOpen ? '收起字词注释' : '🔍 看字词注释'}
-                  </Button>
-                  {noteOpen && <TokenList tokens={s.tokens} />}
+                    size="small"
+                    shape="circle"
+                    type={speech.isSpeaking(`s-${idx}`) ? 'primary' : 'default'}
+                    icon={<SoundOutlined spin={speech.isSpeaking(`s-${idx}`)} />}
+                    disabled={!speech.supported}
+                    onClick={(e) => { e.stopPropagation(); if (readingRef.current) { speech.stop(); readingRef.current = false; setIsReading(false); } speech.say(`s-${idx}`, s.original); }}
+                    style={{ flexShrink: 0, marginTop: 8 }}
+                  />
+                </Tooltip>
+                {/* 右：翻译 + 注释（繁体原版默认隐藏译文，纯挑战） */}
+                <div style={{ flex: '1 1 0', minWidth: 0 }}>
+                  {showTranslation ? (
+                    <>
+                      <div style={{
+                        fontSize: 15, lineHeight: 1.9, color: '#5c4a3a',
+                        paddingLeft: 12, borderLeft: `3px solid ${accent}55`,
+                      }}>
+                        {s.translation}
+                      </div>
+                      <div style={{ marginTop: 6 }}>
+                        <Button size="small" type="link" icon={<EyeInvisibleOutlined />}
+                          onClick={(e) => { e.stopPropagation(); setShowTranslation(false); }}
+                          style={{ padding: 0, height: 'auto', color: '#a08b6b' }}>
+                          隐藏译文
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap',
+                      padding: '8px 12px', borderRadius: 8, background: '#faf5eb',
+                      borderLeft: `3px dashed ${accent}66`, color: '#a08b6b', fontSize: 13,
+                    }}>
+                      🔒 纯挑战 · 仅见原句
+                      <Button size="small" type="link" icon={<EyeOutlined />}
+                        onClick={(e) => { e.stopPropagation(); setShowTranslation(true); }}
+                        style={{ padding: 0, height: 'auto', color: accent }}>
+                        显示译文
+                      </Button>
+                    </div>
+                  )}
+                  <div style={{ marginTop: 8 }}>
+                    <Button
+                      size="small" type="link" icon={<BookOutlined />}
+                      onClick={(e) => { e.stopPropagation(); toggleNote(idx); }}
+                      style={{ padding: 0, height: 'auto', color: accent }}
+                    >
+                      {noteOpen ? '收起字词注释' : '🔍 看字词注释'}
+                    </Button>
+                    {noteOpen && <TokenList tokens={s.tokens} />}
+                  </div>
                 </div>
               </div>
             );
@@ -346,18 +464,30 @@ export default function WenyanReadingMode({
           <div style={{ textAlign: 'center', marginTop: 20, padding: '16px', background: '#faf5eb', borderRadius: 12, border: '1px solid #e8d5b8' }}>
             <Space direction="vertical" size={8}>
               <Text type="secondary" style={{ fontSize: 13 }}>
-                {isAutoPlay ? '⏱ 自动播放中（每句4秒）' : '👆 点击文字区域读下一句'}
+                {isReading ? '📢 正在朗读，跟着一起读吧！'
+                  : isAutoPlay ? '⏱ 自动播放中（每句4秒）' : '👆 点击文字区域读下一句'}
               </Text>
               <Space>
+                <Tooltip title={speech.supported ? '' : '当前浏览器不支持语音朗读'}>
+                  <Button
+                    size="small"
+                    icon={isReading ? <PauseCircleOutlined /> : <SoundOutlined />}
+                    onClick={(e) => { e.stopPropagation(); startReadingAll(); }}
+                    type={isReading ? 'primary' : 'default'}
+                    disabled={!speech.supported}
+                  >
+                    {isReading ? '停止朗读' : '朗读全文'}
+                  </Button>
+                </Tooltip>
                 <Button size="small" icon={isAutoPlay ? <PauseCircleOutlined /> : <CaretRightOutlined />}
-                  onClick={(e) => { e.stopPropagation(); setIsAutoPlay(!isAutoPlay); }}
+                  onClick={(e) => { e.stopPropagation(); toggleAutoPlay(); }}
                   type={isAutoPlay ? 'primary' : 'default'}>
                   {isAutoPlay ? '暂停' : '自动播放'}
                 </Button>
                 <Button size="small" icon={<StepForwardOutlined />}
                   onClick={(e) => { e.stopPropagation(); goNext(); }}>下一句</Button>
                 <Button size="small" icon={<ReloadOutlined />}
-                  onClick={(e) => { e.stopPropagation(); setRevealedIdx([0]); setCurrentIdx(0); setIsCompleted(false); setExpandedNotes({}); }}>重来</Button>
+                  onClick={(e) => { e.stopPropagation(); speech.stop(); readingRef.current = false; setIsReading(false); setRevealedIdx([0]); setCurrentIdx(0); setIsCompleted(false); setExpandedNotes({}); }}>重来</Button>
               </Space>
             </Space>
           </div>
@@ -442,6 +572,8 @@ export default function WenyanReadingMode({
       <style>{`
         @media (max-width: 768px) {
           .reading-wenyan-original { font-size: calc(var(--font-size, 20px) - 2px) !important; }
+          .wenyan-sentence { flex-direction: column !important; gap: 8px !important; }
+          .wenyan-arrow { display: none !important; }
         }
       `}</style>
     </div>

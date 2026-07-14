@@ -1,18 +1,52 @@
-import { Typography, Button, Row, Col, Card, Space, Tag, Divider } from 'antd';
+import { useRef, type CSSProperties, type ReactNode } from 'react';
+import { Typography, Button, Row, Col, Card, Space, Tag } from 'antd';
 import {
   ThunderboltOutlined, ReadOutlined, BulbOutlined,
   UserOutlined, RobotOutlined, BarChartOutlined, DatabaseOutlined,
   ArrowRightOutlined, ScanOutlined, AimOutlined, ExperimentOutlined,
-  FileTextOutlined,
+  FileTextOutlined, GlobalOutlined, ArrowDownOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../stores/appStore';
 
 const { Title, Text, Paragraph } = Typography;
 
+/* 确定性星点（模块加载时生成，渲染稳定） */
+const STARS = (() => {
+  let s = 1337;
+  const rnd = () => (s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+  return Array.from({ length: 56 }, () => ({
+    left: +(rnd() * 100).toFixed(2),
+    top: +(rnd() * 76).toFixed(2),
+    size: +(0.8 + rnd() * 2.3).toFixed(2),
+    dur: +(2 + rnd() * 3).toFixed(2),
+    delay: +(rnd() * 4).toFixed(2),
+  }));
+})();
+
+const NEBULAE = [
+  { left: '8%', top: '18%', size: 320, color: 'rgba(184,134,11,0.30)' },
+  { left: '68%', top: '8%', size: 380, color: 'rgba(196,58,49,0.22)' },
+  { left: '40%', top: '54%', size: 300, color: 'rgba(91,140,90,0.20)' },
+  { left: '84%', top: '42%', size: 260, color: 'rgba(46,89,132,0.20)' },
+];
+
+function Eyebrow({ children }: { children: ReactNode }) {
+  return (
+    <div style={{ textAlign: 'center', marginBottom: 48 }}>
+      <Text className="lp-eyebrow" style={{
+        fontSize: 13, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--gold)',
+      }}>
+        {children}
+      </Text>
+    </div>
+  );
+}
+
 export default function LandingPage() {
   const navigate = useNavigate();
-  const switchRole = useAppStore(s => s.switchRole);
+  const switchRole = useAppStore((s) => s.switchRole);
+  const featuresRef = useRef<HTMLDivElement>(null);
 
   const enterSystem = (role: 'student' | 'teacher' | 'librarian') => {
     switchRole(role);
@@ -24,60 +58,97 @@ export default function LandingPage() {
     navigate(routes[role]);
   };
 
+  const scrollToFeatures = () => {
+    featuresRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
-    <div style={{ background: '#fdfaf3' }}>
+    <div style={{ background: 'var(--bg-base)' }}>
       {/* ===== Hero 区域 ===== */}
       <div style={{
         textAlign: 'center',
-        padding: '100px 24px 80px',
+        padding: '110px 24px 130px',
         background: 'linear-gradient(160deg, #1a0f0a 0%, #2c1810 35%, #3c2415 70%, #1a0f0a 100%)',
         color: '#f5e6d3',
         position: 'relative',
         overflow: 'hidden',
       }}>
-        {/* 背景装饰 */}
-        <div style={{
-          position: 'absolute', top: -60, right: -40,
-          width: 300, height: 300,
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(184,134,11,0.12) 0%, transparent 70%)',
-        }} />
-        <div style={{
-          position: 'absolute', bottom: -80, left: -60,
-          width: 400, height: 400,
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(196,58,49,0.08) 0%, transparent 70%)',
-        }} />
+        {/* 星点层 */}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
+          {STARS.map((st, i) => (
+            <span
+              key={i}
+              className="lp-star"
+              style={{
+                left: `${st.left}%`, top: `${st.top}%`,
+                width: st.size, height: st.size,
+                ['--dur' as string]: `${st.dur}s`,
+                ['--delay' as string]: `${st.delay}s`,
+              } as CSSProperties}
+            />
+          ))}
+        </div>
+        {/* 星云层 */}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
+          {NEBULAE.map((n, i) => (
+            <div
+              key={i}
+              className="lp-nebula"
+              style={{
+                left: n.left, top: n.top,
+                width: n.size, height: n.size,
+                background: n.color,
+                animationDelay: `${i * 2.4}s`,
+              }}
+            />
+          ))}
+        </div>
+        {/* 水墨远山（呼应国风 + 文化星图） */}
+        <svg
+          viewBox="0 0 1440 220" preserveAspectRatio="none"
+          style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 190, zIndex: 1, pointerEvents: 'none', opacity: 0.6 }}
+        >
+          <defs>
+            <linearGradient id="lp-m1" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#3c2415" />
+              <stop offset="100%" stopColor="#1a0f0a" />
+            </linearGradient>
+          </defs>
+          <path d="M0,160 C240,90 480,140 720,100 C960,60 1200,130 1440,80 L1440,220 L0,220 Z" fill="url(#lp-m1)" />
+          <path d="M0,160 C240,90 480,140 720,100 C960,60 1200,130 1440,80" fill="none" stroke="rgba(184,134,11,0.5)" strokeWidth="1.5" />
+          <path d="M0,192 C300,150 520,202 760,160 C1000,120 1240,182 1440,150 L1440,220 L0,220 Z" fill="rgba(18,11,7,0.88)" />
+        </svg>
 
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ marginBottom: 20 }}>
+        <div style={{ position: 'relative', zIndex: 2 }} className="lp-rise">
+          <div style={{ marginBottom: 22 }} className="lp-hero-seal">
             <span className="seal" style={{
               width: 64, height: 64, fontSize: 17,
               borderColor: '#b8860b', color: '#b8860b',
               margin: '0 auto', display: 'inline-flex',
               borderWidth: 2,
+              animation: 'lp-drift 9s ease-in-out infinite',
             }}>
               古籍探宝
             </span>
           </div>
 
-          <Title style={{
-            color: '#f5e6d3', fontSize: 44, marginBottom: 4, fontWeight: 800,
+          <Title className="lp-hero-title" style={{
+            color: '#f5e6d3', fontSize: 46, marginBottom: 4, fontWeight: 800,
             letterSpacing: '0.02em',
           }}>
             和小学生一起读古诗！
           </Title>
-          <Title style={{
-            color: '#b8860b', fontSize: 36, marginTop: 0, marginBottom: 8,
+          <Title className="lp-hero-subtitle" style={{
+            color: '#b8860b', fontSize: 34, marginTop: 0, marginBottom: 10,
             fontWeight: 700, letterSpacing: '0.03em',
           }}>
-            古籍探宝 —— CADAL 古籍课标智能适配阅读系统
+            古籍探宝 · CADAL 古籍课标智能适配阅读系统
           </Title>
           <Title level={4} style={{
-            color: '#d4c5b2', marginTop: 0, marginBottom: 20,
+            color: '#d4c5b2', marginTop: 0, marginBottom: 22,
             fontWeight: 400, fontSize: 16,
           }}>
-            基于 CADAL 280万册古籍资源 · 义务教育课标智能适配与轻量化重构
+            基于 CADAL 280 万册古籍资源 · 义务教育课标智能适配与轻量化重构
           </Title>
 
           <Paragraph style={{
@@ -86,31 +157,52 @@ export default function LandingPage() {
           }}>
             对接义务教育语文课标 · AI 三层分级重构 · 真实用户视角定义需求
             <br />
-            致力于解决"CADAL 280 万册古籍看不懂、不对应课本、无法服务教学"的现实难题
+            致力于解决「CADAL 280 万册古籍看不懂、不对应课本、无法服务教学」的现实难题
           </Paragraph>
 
           <Space size="middle" wrap>
             <Button
+              className="lp-cta"
               size="large"
               icon={<ReadOutlined />}
               onClick={() => enterSystem('student')}
               style={{
                 background: 'linear-gradient(135deg, #5b8c5a, #6dae6a)',
                 border: 'none',
-                height: 56,
-                padding: '0 40px',
+                height: 58,
+                padding: '0 42px',
                 fontSize: 18,
-                borderRadius: 12,
+                borderRadius: 14,
                 fontWeight: 700,
-                boxShadow: '0 6px 24px rgba(91,140,90,0.4)',
+                boxShadow: '0 8px 28px rgba(91,140,90,0.45)',
               }}
             >
               🎒 我是小学生，开始读古诗！
             </Button>
+            <Button
+              className="lp-cta"
+              size="large"
+              icon={<GlobalOutlined />}
+              onClick={() => { switchRole('student'); navigate('/student/galaxy'); }}
+              style={{
+                background: 'linear-gradient(135deg, #2e5984, #3a6ea5)',
+                border: 'none',
+                height: 58,
+                padding: '0 34px',
+                fontSize: 16,
+                borderRadius: 14,
+                fontWeight: 700,
+                color: '#fff',
+                boxShadow: '0 8px 28px rgba(46,89,132,0.45)',
+              }}
+            >
+              🌌 文化星图探索
+            </Button>
           </Space>
-          <div style={{ marginTop: 20 }}>
+          <div style={{ marginTop: 22 }}>
             <Space size="middle" wrap>
               <Button
+                className="lp-cta"
                 size="large"
                 type="primary"
                 icon={<ThunderboltOutlined />}
@@ -118,48 +210,62 @@ export default function LandingPage() {
                 style={{
                   background: 'linear-gradient(135deg, #c43a31, #d4544a)',
                   border: 'none',
-                  height: 44,
+                  height: 46,
                   padding: '0 28px',
                   fontSize: 14,
-                  borderRadius: 8,
+                  borderRadius: 10,
                   fontWeight: 500,
-                  boxShadow: '0 4px 16px rgba(196,58,49,0.3)',
+                  boxShadow: '0 4px 18px rgba(196,58,49,0.35)',
                 }}
               >
                 5 分钟系统演示
               </Button>
               <Button
+                className="lp-cta"
                 size="large"
                 icon={<DatabaseOutlined />}
                 onClick={() => navigate('/engine')}
                 style={{
-                  height: 44, padding: '0 28px', fontSize: 14, borderRadius: 8,
-                  border: '1px solid rgba(184,134,11,0.4)', color: '#b8860b',
-                  background: 'rgba(184,134,11,0.06)',
+                  height: 46, padding: '0 28px', fontSize: 14, borderRadius: 10,
+                  border: '1px solid rgba(184,134,11,0.45)', color: '#b8860b',
+                  background: 'rgba(184,134,11,0.08)',
                 }}
               >
                 课标匹配引擎
               </Button>
               <Button
+                className="lp-cta"
                 size="large"
                 icon={<ReadOutlined />}
                 onClick={() => enterSystem('teacher')}
                 style={{
-                  height: 44, padding: '0 28px', fontSize: 14, borderRadius: 8,
-                  border: '1px solid rgba(245,230,211,0.3)', color: '#f5e6d3',
-                  background: 'rgba(245,230,211,0.06)',
+                  height: 46, padding: '0 28px', fontSize: 14, borderRadius: 10,
+                  border: '1px solid rgba(245,230,211,0.32)', color: '#f5e6d3',
+                  background: 'rgba(245,230,211,0.07)',
                 }}
               >
-                教师/馆员入口
+                教师 / 馆员入口
               </Button>
             </Space>
+          </div>
+
+          {/* 向下滚动提示 */}
+          <div style={{ marginTop: 56 }}>
+            <Button
+              type="text"
+              onClick={scrollToFeatures}
+              className="lp-scroll-hint"
+              style={{ color: '#b8860b', fontSize: 22, height: 'auto' }}
+              icon={<ArrowDownOutlined />}
+              aria-label="向下浏览"
+            />
           </div>
         </div>
       </div>
 
-      {/* ===== 数字统计条 ===== */}
+      {/* ===== 数字统计条（玻璃卡浮于 Hero 下沿） ===== */}
       <div style={{
-        maxWidth: 1000, margin: '-40px auto 0', position: 'relative', zIndex: 2,
+        maxWidth: 1000, margin: '-56px auto 0', position: 'relative', zIndex: 3,
         padding: '0 24px',
       }}>
         <Row gutter={[16, 16]}>
@@ -170,22 +276,14 @@ export default function LandingPage() {
             { value: '5 min', label: '备课提效', color: '#2e5984' },
           ].map((item, i) => (
             <Col xs={12} sm={6} key={i}>
-              <Card
-                style={{
-                  textAlign: 'center', borderRadius: 12,
-                  border: '1px solid #e8d5b8',
-                  boxShadow: '0 2px 12px rgba(44,24,16,0.06)',
-                  background: '#fffef9',
-                }}
-                bodyStyle={{ padding: '20px 16px' }}
-              >
+              <Card className="lp-card lp-glass" style={{ textAlign: 'center', borderRadius: 14 }}>
                 <Text style={{
-                  fontSize: 28, fontWeight: 800, color: item.color,
+                  fontSize: 30, fontWeight: 800, color: item.color,
                   display: 'block', lineHeight: 1.2,
                 }}>
                   {item.value}
                 </Text>
-                <Text type="secondary" style={{ fontSize: 13, marginTop: 4, display: 'block' }}>
+                <Text type="secondary" style={{ fontSize: 13, marginTop: 4, display: 'block', color: 'var(--ink-gray)' }}>
                   {item.label}
                 </Text>
               </Card>
@@ -195,12 +293,10 @@ export default function LandingPage() {
       </div>
 
       {/* ===== 痛点区域 ===== */}
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '80px 24px 64px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 48 }}>
-          <Text type="secondary" style={{ fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-            Problem · 现实难题
-          </Text>
-          <Title level={2} style={{ color: '#2c1810', marginTop: 8, marginBottom: 12, fontWeight: 700 }}>
+      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '84px 24px 64px' }} ref={featuresRef}>
+        <Eyebrow>Problem · 现实难题</Eyebrow>
+        <div style={{ textAlign: 'center', marginBottom: 44 }}>
+          <Title level={2} style={{ color: 'var(--ink-black)', marginTop: 0, marginBottom: 12, fontWeight: 700 }}>
             CADAL 古籍资源服务教学的现实难题
           </Title>
           <Paragraph type="secondary" style={{ fontSize: 15, maxWidth: 600, margin: '0 auto' }}>
@@ -208,10 +304,10 @@ export default function LandingPage() {
           </Paragraph>
         </div>
 
-        <Row gutter={[32, 32]}>
+        <Row gutter={[24, 24]}>
           {[
             {
-              num: '01', title: '280万册古籍，难以直接用于教学',
+              num: '01', title: '280 万册古籍，难以直接用于教学',
               desc: 'CADAL 拥有海量古籍、蒙学、方志资源，但原文晦涩、缺乏难度分级、未对标中小学课本。现有系统仅提供原版查看，学生难以自主阅读。',
             },
             {
@@ -224,34 +320,34 @@ export default function LandingPage() {
             },
           ].map((item, i) => (
             <Col xs={24} sm={8} key={i}>
-              <div>
+              <Card className="lp-card" style={{
+                height: '100%', borderRadius: 14, border: '1px solid var(--border-ink)',
+                background: '#fffef9', boxShadow: '0 2px 16px rgba(44,24,16,0.05)',
+              }} styles={{ body: { padding: '26px 22px' } }}>
                 <Text style={{
-                  fontSize: 48, fontWeight: 800, color: '#e8d5b8',
-                  display: 'block', lineHeight: 1, marginBottom: 8,
+                  fontSize: 46, fontWeight: 800, color: '#e8d5b8',
+                  display: 'block', lineHeight: 1, marginBottom: 10,
                 }}>
                   {item.num}
                 </Text>
-                <Title level={5} style={{ color: '#2c1810', marginBottom: 8, fontWeight: 600 }}>
+                <Title level={5} style={{ color: 'var(--ink-black)', marginBottom: 10, fontWeight: 600 }}>
                   {item.title}
                 </Title>
-                <Text type="secondary" style={{ fontSize: 13, lineHeight: 1.8 }}>
+                <Text style={{ fontSize: 13, lineHeight: 1.8, color: 'var(--ink-gray)' }}>
                   {item.desc}
                 </Text>
-                {i < 2 && <Divider style={{ margin: '24px 0 0', borderColor: '#f0e6d3' }} />}
-              </div>
+              </Card>
             </Col>
           ))}
         </Row>
       </div>
 
       {/* ===== 核心功能 ===== */}
-      <div style={{ background: '#faf5eb', padding: '80px 24px' }}>
+      <div style={{ background: '#faf5eb', padding: '84px 24px' }}>
         <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <Text type="secondary" style={{ fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-              Core Features · 原创功能体系
-            </Text>
-            <Title level={2} style={{ color: '#2c1810', marginTop: 8, marginBottom: 12, fontWeight: 700 }}>
+          <Eyebrow>Core Features · 原创功能体系</Eyebrow>
+          <div style={{ textAlign: 'center', marginBottom: 44 }}>
+            <Title level={2} style={{ color: 'var(--ink-black)', marginTop: 0, marginBottom: 12, fontWeight: 700 }}>
               四大核心功能
             </Title>
             <Paragraph type="secondary" style={{ fontSize: 15, maxWidth: 600, margin: '0 auto' }}>
@@ -291,19 +387,16 @@ export default function LandingPage() {
               },
             ].map((item, i) => (
               <Col xs={24} sm={12} key={i}>
-                <Card
-                  style={{
-                    borderRadius: 12, border: '1px solid #e8d5b8',
-                    boxShadow: '0 2px 16px rgba(44,24,16,0.04)',
-                    height: '100%', background: '#fffef9',
-                  }}
-                  bodyStyle={{ padding: '28px 24px' }}
-                >
+                <Card className="lp-feature" style={{
+                  borderRadius: 14, border: '1px solid var(--border-ink)',
+                  boxShadow: '0 2px 16px rgba(44,24,16,0.05)',
+                  height: '100%', background: '#fffef9',
+                }} styles={{ body: { padding: '28px 24px' } }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                     <Tag color={item.tagColor} style={{ borderRadius: 6, padding: '2px 12px', fontSize: 12 }}>
                       {item.tag}
                     </Tag>
-                    <Text type="secondary" style={{ fontSize: 11, letterSpacing: '0.05em' }}>
+                    <Text style={{ fontSize: 11, letterSpacing: '0.05em', color: 'var(--ink-gray)' }}>
                       {item.num}
                     </Text>
                   </div>
@@ -313,7 +406,7 @@ export default function LandingPage() {
                     <Title level={5} style={{ margin: 0, fontWeight: 600 }}>{item.title}</Title>
                   </Space>
 
-                  <Paragraph type="secondary" style={{ fontSize: 13, lineHeight: 1.8, marginBottom: 16 }}>
+                  <Paragraph style={{ fontSize: 13, lineHeight: 1.8, marginBottom: 16, color: 'var(--ink-gray)' }}>
                     {item.desc}
                   </Paragraph>
 
@@ -331,16 +424,14 @@ export default function LandingPage() {
       </div>
 
       {/* ===== 工作流程 ===== */}
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '80px 24px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 48 }}>
-          <Text type="secondary" style={{ fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-            Workflow · 工作流程
-          </Text>
-          <Title level={2} style={{ color: '#2c1810', marginTop: 8, marginBottom: 12, fontWeight: 700 }}>
+      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '84px 24px' }}>
+        <Eyebrow>Workflow · 工作流程</Eyebrow>
+        <div style={{ textAlign: 'center', marginBottom: 44 }}>
+          <Title level={2} style={{ color: 'var(--ink-black)', marginTop: 0, marginBottom: 12, fontWeight: 700 }}>
             从古籍到课堂的四步旅程
           </Title>
           <Paragraph type="secondary" style={{ fontSize: 15, maxWidth: 600, margin: '0 auto' }}>
-            一条清晰的智能流水线，让 CADAL 古籍从"藏在深处"走到"用在课上"。
+            一条清晰的智能流水线，让 CADAL 古籍从「藏在深处」走到「用在课上」。
           </Paragraph>
         </div>
 
@@ -352,10 +443,14 @@ export default function LandingPage() {
             { step: '04', icon: <FileTextOutlined />, title: '教学与研学一键落地', desc: '教案、练习、打卡、展陈任务一次生成，老师、学生、馆员即取即用。' },
           ].map((item, i) => (
             <Col xs={24} sm={12} md={6} key={i}>
-              <div style={{ textAlign: 'center' }}>
+              <Card className="lp-step" style={{
+                textAlign: 'center', height: '100%', borderRadius: 14,
+                border: '1px solid var(--border-ink)', background: '#fffef9',
+                boxShadow: '0 2px 16px rgba(44,24,16,0.05)',
+              }} styles={{ body: { padding: '28px 18px' } }}>
                 <div style={{
                   width: 56, height: 56, borderRadius: 14,
-                  background: '#faf5eb', border: '1px solid #e8d5b8',
+                  background: '#faf5eb', border: '1px solid var(--border-ink)',
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                   marginBottom: 16, fontSize: 22, color: '#c43a31',
                 }}>
@@ -368,8 +463,8 @@ export default function LandingPage() {
                   {item.step}
                 </Text>
                 <Title level={5} style={{ marginBottom: 8, fontWeight: 600 }}>{item.title}</Title>
-                <Text type="secondary" style={{ fontSize: 12, lineHeight: 1.7 }}>{item.desc}</Text>
-              </div>
+                <Text style={{ fontSize: 12, lineHeight: 1.7, color: 'var(--ink-gray)' }}>{item.desc}</Text>
+              </Card>
             </Col>
           ))}
         </Row>
@@ -377,44 +472,40 @@ export default function LandingPage() {
         {/* 底部引用 */}
         <div style={{
           textAlign: 'center', marginTop: 48,
-          padding: '24px', background: '#faf5eb', borderRadius: 12,
+          padding: '28px', background: '#faf5eb', borderRadius: 14,
+          border: '1px solid var(--border-ink)',
         }}>
           <Text style={{ fontSize: 15, color: '#5c4a3a', lineHeight: 2, fontStyle: 'italic' }}>
-            "让 280 万册古籍，真正走进小学、走进课堂、走进每一个孩子的语文课本。"
+            「让 280 万册古籍，真正走进小学、走进课堂、走进每一个孩子的语文课本。」
           </Text>
           <br />
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <Text style={{ fontSize: 12, color: 'var(--ink-gray)' }}>
             — 古籍探宝团队 · 基于 2022 版义务教育语文课程标准
           </Text>
         </div>
       </div>
 
       {/* ===== 团队分工 ===== */}
-      <div style={{ background: '#faf5eb', padding: '80px 24px' }}>
+      <div style={{ background: '#faf5eb', padding: '84px 24px' }}>
         <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <Text type="secondary" style={{ fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-              Team · 团队分工
-            </Text>
-            <Title level={2} style={{ color: '#2c1810', marginTop: 8, marginBottom: 12, fontWeight: 700 }}>
+          <Eyebrow>Team · 团队分工</Eyebrow>
+          <div style={{ textAlign: 'center', marginBottom: 44 }}>
+            <Title level={2} style={{ color: 'var(--ink-black)', marginTop: 0, marginBottom: 12, fontWeight: 700 }}>
               团队分工
             </Title>
             <Paragraph type="secondary" style={{ fontSize: 15, maxWidth: 600, margin: '0 auto' }}>
-              用户视角 × AI 工程，双线并行，让"能用"与"好用"同时到位。
+              用户视角 × AI 工程，双线并行，让「能用」与「好用」同时到位。
             </Paragraph>
           </div>
 
           <Row gutter={[32, 32]}>
             <Col xs={24} md={12}>
-              <Card
-                style={{
-                  borderRadius: 12, border: '1px solid #e8d5b8',
-                  borderTop: '4px solid #c43a31',
-                  boxShadow: '0 2px 16px rgba(44,24,16,0.04)',
-                  height: '100%', background: '#fffef9',
-                }}
-                bodyStyle={{ padding: '32px 28px' }}
-              >
+              <Card className="lp-card" style={{
+                borderRadius: 14, border: '1px solid var(--border-ink)',
+                borderTop: '4px solid #c43a31',
+                boxShadow: '0 2px 16px rgba(44,24,16,0.05)',
+                height: '100%', background: '#fffef9',
+              }} styles={{ body: { padding: '32px 28px' } }}>
                 <Space align="start" size="middle">
                   <div style={{
                     width: 48, height: 48, borderRadius: 12,
@@ -430,7 +521,7 @@ export default function LandingPage() {
                     <Tag color="#c43a31" style={{ marginTop: 6, borderRadius: 6 }}>用户视角 · 课标专业</Tag>
                   </div>
                 </Space>
-                <ul style={{ marginTop: 20, paddingLeft: 20, lineHeight: 2.2 }}>
+                <ul style={{ marginTop: 20, paddingLeft: 20, lineHeight: 2.2, color: 'var(--ink-gray)', fontSize: 14 }}>
                   <li>制定小学生古文难度分级标准（基于 2022 版语文课标）</li>
                   <li>梳理五六年级课内重难点、易错点和考点分布</li>
                   <li>设计面向儿童的界面交互逻辑与操作流程</li>
@@ -440,15 +531,12 @@ export default function LandingPage() {
               </Card>
             </Col>
             <Col xs={24} md={12}>
-              <Card
-                style={{
-                  borderRadius: 12, border: '1px solid #e8d5b8',
-                  borderTop: '4px solid #2e5984',
-                  boxShadow: '0 2px 16px rgba(44,24,16,0.04)',
-                  height: '100%', background: '#fffef9',
-                }}
-                bodyStyle={{ padding: '32px 28px' }}
-              >
+              <Card className="lp-card" style={{
+                borderRadius: 14, border: '1px solid var(--border-ink)',
+                borderTop: '4px solid #2e5984',
+                boxShadow: '0 2px 16px rgba(44,24,16,0.05)',
+                height: '100%', background: '#fffef9',
+              }} styles={{ body: { padding: '32px 28px' } }}>
                 <Space align="start" size="middle">
                   <div style={{
                     width: 48, height: 48, borderRadius: 12,
@@ -464,7 +552,7 @@ export default function LandingPage() {
                     <Tag color="#2e5984" style={{ marginTop: 6, borderRadius: 6 }}>全栈开发 · AI 工程</Tag>
                   </div>
                 </Space>
-                <ul style={{ marginTop: 20, paddingLeft: 20, lineHeight: 2.2 }}>
+                <ul style={{ marginTop: 20, paddingLeft: 20, lineHeight: 2.2, color: 'var(--ink-gray)', fontSize: 14 }}>
                   <li>对接 CADAL 官方开放资源接口</li>
                   <li>搭建前端网页系统与 AI 语义处理模型</li>
                   <li>实现难度分级、文本重构、课标匹配算法</li>
@@ -478,12 +566,10 @@ export default function LandingPage() {
       </div>
 
       {/* ===== 三端入口 ===== */}
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '80px 24px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 48 }}>
-          <Text type="secondary" style={{ fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-            System · 三端系统入口
-          </Text>
-          <Title level={2} style={{ color: '#2c1810', marginTop: 8, marginBottom: 12, fontWeight: 700 }}>
+      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '84px 24px' }}>
+        <Eyebrow>System · 三端系统入口</Eyebrow>
+        <div style={{ textAlign: 'center', marginBottom: 44 }}>
+          <Title level={2} style={{ color: 'var(--ink-black)', marginTop: 0, marginBottom: 12, fontWeight: 700 }}>
             三端系统入口
           </Title>
           <Paragraph type="secondary" style={{ fontSize: 15, maxWidth: 600, margin: '0 auto' }}>
@@ -520,14 +606,15 @@ export default function LandingPage() {
           ].map((item, i) => (
             <Col xs={24} sm={8} key={i}>
               <Card
+                className="lp-role"
                 hoverable
                 style={{
-                  borderRadius: 12, border: '1px solid #e8d5b8',
+                  borderRadius: 14, border: '1px solid var(--border-ink)',
                   textAlign: 'center', height: '100%',
-                  boxShadow: '0 2px 16px rgba(44,24,16,0.04)',
+                  boxShadow: '0 2px 16px rgba(44,24,16,0.05)',
                   background: '#fffef9',
                 }}
-                bodyStyle={{ padding: '32px 20px' }}
+                styles={{ body: { padding: '32px 20px' } }}
               >
                 <div style={{
                   width: 56, height: 56, borderRadius: 14,
@@ -539,31 +626,32 @@ export default function LandingPage() {
                 </div>
 
                 <Title level={4} style={{ marginBottom: 4, fontWeight: 600 }}>{item.title}</Title>
-                <Text type="secondary" style={{ fontSize: 13 }}>{item.desc}</Text>
+                <Text style={{ fontSize: 13, color: 'var(--ink-gray)' }}>{item.desc}</Text>
 
                 <Row gutter={16} style={{ margin: '20px 0' }}>
                   <Col span={12}>
                     <Text strong style={{ fontSize: 20, color: item.color, display: 'block' }}>
                       {item.stat1}
                     </Text>
-                    <Text type="secondary" style={{ fontSize: 11 }}>{item.stat1Label}</Text>
+                    <Text style={{ fontSize: 11, color: 'var(--ink-gray)' }}>{item.stat1Label}</Text>
                   </Col>
                   <Col span={12}>
                     <Text strong style={{ fontSize: 20, color: item.color, display: 'block' }}>
                       {item.stat2}
                     </Text>
-                    <Text type="secondary" style={{ fontSize: 11 }}>{item.stat2Label}</Text>
+                    <Text style={{ fontSize: 11, color: 'var(--ink-gray)' }}>{item.stat2Label}</Text>
                   </Col>
                 </Row>
 
                 <Button
+                  className="lp-cta"
                   type="primary"
                   block
                   icon={<ArrowRightOutlined />}
                   onClick={() => enterSystem(item.role)}
                   style={{
                     background: item.color, borderColor: item.color,
-                    borderRadius: 8, height: 40, fontWeight: 500,
+                    borderRadius: 10, height: 42, fontWeight: 500,
                   }}
                 >
                   {item.btnText}
@@ -576,7 +664,7 @@ export default function LandingPage() {
 
       {/* ===== 底部 ===== */}
       <div style={{
-        textAlign: 'center', padding: '40px 24px',
+        textAlign: 'center', padding: '44px 24px',
         background: '#2c1810', color: '#a89880',
       }}>
         <Text style={{ color: '#d4c5b2', fontSize: 14, fontWeight: 500 }}>

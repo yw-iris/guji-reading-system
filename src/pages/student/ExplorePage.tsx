@@ -20,8 +20,8 @@ import {
   AudioOutlined,
   AudioMutedOutlined,
 } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
-import { useAppStore } from '../../stores/appStore';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAppStore, getFilteredTextsFromCache } from '../../stores/appStore';
 import { mockTexts } from '../../utils/mockData';
 import type { AncientText, GradeLevel } from '../../types';
 
@@ -60,8 +60,15 @@ interface AutoCompleteOption {
 
 export default function ExplorePage() {
   const navigate = useNavigate();
-  const { searchKeyword, setSearchKeyword, selectedGrade, setSelectedGrade, setCurrentText, texts, setTexts, getFilteredTexts } = useAppStore();
-  const [selectedDynasty, setSelectedDynasty] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const { searchKeyword, setSearchKeyword, selectedGrade, setSelectedGrade, setCurrentText, texts, setTexts, startWarp, currentUser } = useAppStore();
+
+  // 从星图跳转携带的筛选参数（朝代 / 学段 / 文体）
+  const queryDynasty = searchParams.get('dynasty');
+  const queryStage = searchParams.get('stage');
+  const queryGenre = searchParams.get('genre');
+
+  const [selectedDynasty, setSelectedDynasty] = useState<string | null>(queryDynasty);
 
   // 初始化 texts 到 store
   useEffect(() => {
@@ -70,12 +77,32 @@ export default function ExplorePage() {
     }
   }, [texts.length, setTexts]);
 
+  // 默认按当前用户年级筛选，避免首屏栏目空白（用户未手动改过时）
+  useEffect(() => {
+    if (selectedGrade === null && currentUser?.grade) {
+      setSelectedGrade(currentUser.grade);
+    }
+  }, [selectedGrade, currentUser?.grade, setSelectedGrade]);
+
+  // 首屏 texts 可能尚未填充，直接以 mockTexts 为数据源计算，避免空白闪烁
+  const sourceTexts = texts.length > 0 ? texts : mockTexts;
+
   // 使用缓存筛选逻辑
-  const filteredTexts = getFilteredTexts({
+  let filteredTexts = getFilteredTextsFromCache(sourceTexts, {
     grade: selectedGrade,
     dynasty: selectedDynasty,
     keyword: searchKeyword,
   });
+
+  // 星图维度筛选（学段 / 文体）
+  if (queryStage) {
+    filteredTexts = filteredTexts.filter((t) => t.schoolStage.includes(queryStage as 'primary' | 'junior' | 'senior'));
+  }
+  if (queryGenre === 'wenyan') {
+    filteredTexts = filteredTexts.filter((t) => t.tags.includes('文言文'));
+  } else if (queryGenre === 'poem') {
+    filteredTexts = filteredTexts.filter((t) => !t.tags.includes('文言文'));
+  }
 
   // AutoComplete 联想选项
   const autoCompleteOptions = useMemo<AutoCompleteOption[]>(() => {
@@ -190,7 +217,8 @@ export default function ExplorePage() {
 
   const handleStartReading = (text: AncientText) => {
     setCurrentText(text);
-    navigate(`/student/reading/${text.id}`);
+    startWarp({ name: text.title, color: '#9ec5f0' });
+    setTimeout(() => navigate(`/student/reading/${text.id}`), 1150);
   };
 
   // 古籍卡片渲染函数
@@ -392,6 +420,27 @@ export default function ExplorePage() {
           </Col>
         </Row>
       </Card>
+
+      {/* 星图来源提示 */}
+      {(queryDynasty || queryStage || queryGenre) && (
+        <div style={{
+          marginBottom: 16, padding: '10px 16px',
+          background: 'linear-gradient(135deg, rgba(46,89,132,0.1), rgba(184,134,11,0.1))',
+          border: '1px solid #e8d5b8', borderRadius: 10,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}>
+          <Text style={{ color: STYLE.titleColor, fontSize: 14 }}>
+            🌌 来自文化星图：
+            <Text strong style={{ color: STYLE.accentGold }}>
+              {queryDynasty ? `${queryDynasty}代` : queryStage === 'primary' ? '小学古诗词' : queryStage === 'junior' ? '初中文言文' : queryStage === 'senior' ? '高中文言文' : queryGenre === 'wenyan' ? '文言文' : '古诗词'}
+            </Text>
+            ，共 {filteredTexts.length} 篇
+          </Text>
+          <Button type="link" size="small" onClick={() => navigate('/student/galaxy')}>
+            返回星图
+          </Button>
+        </div>
+      )}
 
       {/* 古籍列表 */}
       {filteredTexts.length === 0 && recommendedTexts.length === 0 ? (

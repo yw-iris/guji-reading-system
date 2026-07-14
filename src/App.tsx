@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import AppLayout from './components/layout/AppLayout';
+import TunnelTransition from './components/reading/TunnelTransition';
 
 // Landing Page（独立页面，不需要侧边栏）
 import LandingPage from './pages/LandingPage';
@@ -16,6 +17,7 @@ import TextbookEnginePage from './pages/engine/TextbookEnginePage';
 import ExplorePage from './pages/student/ExplorePage';
 import ReadingPage from './pages/student/ReadingPage';
 import MyReadingPage from './pages/student/MyReadingPage';
+import GalaxyPage from './pages/student/GalaxyPage';
 
 // 教师端页面
 import TeacherPlansPage from './pages/teacher/PlansPage';
@@ -76,6 +78,7 @@ function App() {
 
             {/* 学生端 */}
             <Route path="student/explore" element={<ExplorePage />} />
+            <Route path="student/galaxy" element={<GalaxyPage />} />
             <Route path="student/reading/:textId" element={<ReadingPage />} />
             <Route path="student/reading" element={<MyReadingPage />} />
             <Route path="student/tasks" element={<MyReadingPage />} />
@@ -93,10 +96,13 @@ function App() {
             <Route path="librarian/tasks" element={<TasksManagePage />} />
             <Route path="librarian/students" element={<StudentsPage />} />
 
-            {/* 404 */}
-            <Route path="*" element={<Navigate to="/landing" replace />} />
+          {/* 404 */}
+          <Route path="*" element={<Navigate to="/landing" replace />} />
           </Route>
         </Routes>
+
+        {/* 全局隧道转场（跨页面） */}
+        <TunnelTransition />
       </BrowserRouter>
     </ConfigProvider>
   );
