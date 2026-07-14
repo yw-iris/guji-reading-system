@@ -127,7 +127,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setTexts: (texts) => set({ texts }),
 
   currentText: null,
-  currentTier: 'vernacular',
+  currentTier: 'adapted',
   setCurrentText: (text) => set({ currentText: text }),
   setCurrentTier: (tier) => set({ currentTier: tier }),
 

@@ -221,17 +221,21 @@ export default function ReadingPage() {
   }, [speech]);
 
 
+  // 左栏永远是「古文/文言文原文」（繁体或简体），绝不显示白话层；
+  // 若 currentTier 被设为 vernacular，回退到简体原版，保证左=原文、右=翻译。
+  const sourceTier: TextTier = currentTier === 'vernacular' ? 'adapted' : currentTier;
+
+  // 左栏：原文逐句
   const sentences = useMemo(() => {
     if (!content) return [];
-    return splitIntoSentences(content[currentTier]);
-  }, [content, currentTier]);
+    return splitIntoSentences(content[sourceTier]);
+  }, [content, sourceTier]);
 
-  // 对照版本：与当前版本相对的另一个层级（原句在左，对照在右）
-  const contrastTier: TextTier = currentTier === 'original' ? 'adapted' : 'original';
-  const contrastSentences = useMemo(() => {
-    if (!content) return [];
-    return splitIntoSentences(content[contrastTier] || content[currentTier]);
-  }, [content, contrastTier, currentTier]);
+  // 右栏：白话翻译逐句（优先用孩子秒懂的大白话 poemLineNotes，否则取白话解读层）
+  const translationSentences = useMemo(() => {
+    if (!content?.vernacular) return [];
+    return splitIntoSentences(content.vernacular);
+  }, [content]);
 
   const totalSentences = sentences.length;
   const totalPages = Math.ceil(totalSentences / PAGE_SIZE);
@@ -328,8 +332,8 @@ export default function ReadingPage() {
   const handleExportPDF = () => {
     if (!content || !text) return;
     setIsExporting(true);
-    const { promise } = exportToPDF(text.title, content[currentTier], {
-      tier: tierLabels[currentTier].label,
+    const { promise } = exportToPDF(text.title, content[sourceTier], {
+      tier: tierLabels[sourceTier].label,
     });
     promise
       .catch((err) => {
@@ -380,7 +384,7 @@ export default function ReadingPage() {
     vernacular: { label: '白话解读', className: 'tier-vernacular', color: '#2e5984' },
   };
 
-  const currentLabel = tierLabels[currentTier];
+  const currentLabel = tierLabels[sourceTier];
 
   return (
     <div style={{ minHeight: '100vh', background: '#fdfaf3' }}>
@@ -518,7 +522,7 @@ export default function ReadingPage() {
               const artRel = poemLineArt[`${text.id}-${idx}`];
               const artUrl = artRel ? `${import.meta.env.BASE_URL}${artRel}` : null;
               const lineNote = poemLineNotes[text.id]?.[idx];
-              const noteText = lineNote ?? (contrastSentences[idx] || sentences[idx]);
+              const noteText = lineNote ?? translationSentences[idx] ?? sentences[idx];
               return (
                 <div
                   key={idx}
@@ -657,7 +661,7 @@ export default function ReadingPage() {
                           id: `rec-${Date.now()}`,
                           studentId: currentUser.id,
                           textId: text.id,
-                          tier: currentTier,
+                          tier: sourceTier,
                           progress: 100,
                           timeSpent: 300,
                           exercisesCompleted: 2,
