@@ -80,6 +80,14 @@ interface AppState {
   addTodayPlan: (id: string) => void;
   removeTodayPlan: (id: string) => void;
 
+  // 闯关式阅读进度（textId -> 已完成的最高关卡 1-4）
+  challengeProgress: Record<string, number>;
+  setChallengeStage: (id: string, stage: number) => void;
+
+  // 阅读笔记（textId -> 笔记文本）
+  readingNotes: Record<string, string>;
+  setReadingNote: (id: string, note: string) => void;
+
   // 学情数据
   learningStats: LearningStats | null;
   setLearningStats: (stats: LearningStats) => void;
@@ -145,6 +153,19 @@ export const useAppStore = create<AppState>((set, get) => ({
     set((state) => (state.todayPlan.includes(id) ? {} : { todayPlan: [...state.todayPlan, id] })),
   removeTodayPlan: (id) =>
     set((state) => ({ todayPlan: state.todayPlan.filter((x) => x !== id) })),
+
+  challengeProgress: {},
+  setChallengeStage: (id, stage) =>
+    set((state) => ({
+      challengeProgress: {
+        ...state.challengeProgress,
+        [id]: Math.max(state.challengeProgress[id] ?? 0, stage),
+      },
+    })),
+
+  readingNotes: {},
+  setReadingNote: (id, note) =>
+    set((state) => ({ readingNotes: { ...state.readingNotes, [id]: note } })),
 
   learningStats: null,
   setLearningStats: (stats) => set({ learningStats: stats }),

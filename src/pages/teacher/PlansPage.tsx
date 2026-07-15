@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { mockLessonPlans } from '../../utils/mockData';
 import type { LessonPlan } from '../../types';
 import { EmptyState, SealMark } from '../../components/common';
+import LessonPlanGenerator from '../../components/teacher/LessonPlanGenerator';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -136,6 +137,7 @@ export default function TeacherPlansPage() {
           >
             AI 智能备课
           </Button>
+          <LessonPlanGenerator onSave={(plan) => setPlans((prev) => [plan, ...prev])} />
         </Space>
       </div>
 

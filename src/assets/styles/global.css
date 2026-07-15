@@ -687,3 +687,54 @@ body {
 /* 水墨晕染过滤（状态切换过渡） */
 .gj-ink-filter { transition: filter 0.4s var(--gj-ease), opacity 0.4s var(--gj-ease); }
 .gj-ink-filter.is-loading { filter: blur(6px); opacity: 0.4; }
+
+/* ===== 备课 / 闯关 共享区块样式 ===== */
+.gj-field-label { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--ink-black); }
+.gj-objective {
+  background: #faf5eb; border: 1px solid rgba(184, 134, 11, 0.3);
+  border-radius: 8px; padding: 10px 12px; line-height: 1.7; color: var(--ink-black); font-size: 13px;
+}
+.gj-step-card {
+  background: #fdfaf3; border: 1px solid var(--border-ink); border-radius: 8px; padding: 10px 12px;
+}
+.gj-exercise-paper { border-radius: 10px; padding: 14px; min-height: 120px; }
+.gj-paper-plain { background: #fdfaf3; border: 1px solid var(--border-ink); }
+.gj-paper-gold {
+  background:
+    radial-gradient(circle at 20% 30%, rgba(184, 134, 11, 0.18), transparent 18%),
+    radial-gradient(circle at 70% 60%, rgba(184, 134, 11, 0.16), transparent 16%),
+    radial-gradient(circle at 45% 85%, rgba(184, 134, 11, 0.14), transparent 14%),
+    #fbf3e0; border: 1px solid var(--gold);
+}
+.gj-paper-red {
+  background: repeating-linear-gradient(90deg, rgba(196, 58, 49, 0.28) 0 1px, transparent 1px 26px), #fbf3e0;
+  border: 1px solid var(--vermilion);
+}
+.gj-exercise-head { font-weight: 700; color: var(--ink-black); margin-bottom: 8px;
+  font-family: 'Noto Serif SC', serif; border-bottom: 1px solid rgba(44, 24, 16, 0.12); padding-bottom: 6px; }
+.gj-exercise-item { font-size: 13px; color: var(--ink-black); margin-bottom: 10px; line-height: 1.6; }
+.gj-exercise-ans { color: var(--jade); font-size: 12px; margin-top: 2px; }
+
+/* ===== 闯关式阅读 · 可点查字原文板 ===== */
+.gj-char-board {
+  background: linear-gradient(180deg, #fdfaf3, #f5e6d3);
+  border: 1px solid var(--border-ink); border-radius: 10px;
+  padding: 16px; line-height: 2; font-size: 19px; letter-spacing: 2px;
+  font-family: 'Noto Serif SC', serif; color: var(--ink-black);
+}
+.gj-char { border-radius: 6px; padding: 0 1px; transition: all .2s var(--gj-ease); }
+.gj-char.is-link { cursor: pointer; }
+.gj-char.is-link:hover { color: var(--vermilion); background: var(--vermilion-soft); }
+.gj-char.is-marked { background: var(--vermilion-soft); border: 1px solid var(--vermilion); }
+.gj-punct { color: var(--warm-brown); }
+
+/* 闯关关卡入口小药丸 */
+.gj-challenge-pill {
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+  border: 1px solid var(--vermilion); color: var(--vermilion);
+  background: var(--vermilion-soft); border-radius: 16px; padding: 2px 12px;
+  font-size: 12px; font-weight: 600; transition: all .25s var(--gj-ease);
+}
+.gj-challenge-pill:hover { background: var(--vermilion); color: #fff; }
+.gj-challenge-pill.is-done { border-color: var(--jade); color: var(--jade); background: var(--jade-soft); }
+.gj-challenge-pill.is-done:hover { background: var(--jade); color: #fff; }

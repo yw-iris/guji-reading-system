@@ -7,6 +7,7 @@ import {
   Select,
   Typography,
   Button,
+  Space,
   message,
 } from 'antd';
 import {
@@ -25,6 +26,7 @@ import { mockTexts, mockReadingRecords } from '../../utils/mockData';
 import type { AncientText, GradeLevel } from '../../types';
 import { EmptyState, InkLoader, SealMark } from '../../components/common';
 import TodayStudyPlan from '../../components/student/TodayStudyPlan';
+import ChallengeReading from '../../components/student/ChallengeReading';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -125,7 +127,10 @@ export default function ExplorePage() {
     addReadingRecord,
     currentUser,
     currentText,
+    challengeProgress,
   } = useAppStore();
+
+  const [challengeText, setChallengeText] = useState<AncientText | null>(null);
 
   // 从星图跳转携带的筛选参数（朝代 / 学段 / 文体）
   const queryDynasty = searchParams.get('dynasty');
@@ -358,6 +363,8 @@ export default function ExplorePage() {
     const isRead = readSet.has(text.id);
     const isProgress = progressSet.has(text.id);
     const status = isRead ? 'read' : isProgress ? 'progress' : 'unread';
+    const isChallenged = (challengeProgress[text.id] ?? 0) >= 4;
+    const challengeStage = challengeProgress[text.id] ?? 0;
     return (
       <Col xs={24} sm={12} lg={8} key={text.id} style={{ perspective: '900px' }}>
         <div
@@ -373,9 +380,14 @@ export default function ExplorePage() {
             }
           }}
         >
-          {/* 顶部：朝代 + 难度印章 */}
+          {/* 顶部：朝代 + 难度印章 + 闯关徽章 */}
           <div className="gj-book-top">
-            <Tag color={dynastyColors[text.dynasty] || '#8b6914'}>{text.dynasty}</Tag>
+            <Space size={4} wrap>
+              <Tag color={dynastyColors[text.dynasty] || '#8b6914'}>{text.dynasty}</Tag>
+              {isChallenged && (
+                <SealMark text="闯" size={30} color="var(--jade)" bg="var(--jade-soft)" />
+              )}
+            </Space>
             <SealMark text={difficultyWord(text.difficulty)} color="var(--vermilion)" size={40} />
           </div>
 
@@ -410,6 +422,18 @@ export default function ExplorePage() {
             )}
             <div className="gj-book-cadal">
               <ClockCircleOutlined /> CADAL {text.cadalId}
+            </div>
+            {/* 闯关入口 */}
+            <div style={{ marginTop: 6 }}>
+              <span
+                className={`gj-challenge-pill${challengeStage > 0 ? ' is-done' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setChallengeText(text);
+                }}
+              >
+                ⚔ 闯关式阅读{challengeStage > 0 ? ` · 已通${challengeStage}/4` : ''}
+              </span>
             </div>
           </div>
 
@@ -761,6 +785,13 @@ export default function ExplorePage() {
           </Row>
         </div>
       )}
+
+      {/* 闯关式阅读弹窗 */}
+      <ChallengeReading
+        text={challengeText}
+        open={!!challengeText}
+        onClose={() => setChallengeText(null)}
+      />
 
       {/* 移动端响应式 + 交互样式 */}
       <style>{`
